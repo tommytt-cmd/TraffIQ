@@ -71,6 +71,40 @@ function WalletPage() {
     finally { setClaiming((items) => { const { [key]: _, ...remaining } = items; return remaining; }); }
   }
 
+  async function switchNetwork() {
+    const expected = Number(import.meta.env.VITE_ROBINHOOD_CHAIN_ID ?? 4663);
+    const chainIdHex = `0x${expected.toString(16)}`;
+    try {
+      if (!(window as any).ethereum) throw new Error("No injected wallet");
+      await (window as any).ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: chainIdHex }] });
+      toast.success("Switched network in wallet.");
+      return true;
+    } catch (err: any) {
+      // 4902 = chain not added to wallet
+      if (err?.code === 4902) {
+        // attempt to add chain (best-effort)
+        try {
+          await (window as any).ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: chainIdHex,
+              chainName: "Robinhood Mainnet",
+              nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+              rpcUrls: [import.meta.env.VITE_ROBINHOOD_RPC ?? "https://rpc.mainnet.chain.robinhood.com"],
+            }],
+          });
+          toast.success("Added and switched to the supported network.");
+          return true;
+        } catch (addErr: any) {
+          toast.error(addErr?.message || "Unable to add network to wallet.");
+          return false;
+        }
+      }
+      toast.error(err?.message || "Unable to switch network.");
+      return false;
+    }
+  }
+
   if (!wallet.address) return <DisconnectedWallet />;
 
   const winningSideByRound = new Map(rewards.map((reward) => [reward.roundNumber.toString(), reward.winningSide]));
@@ -101,7 +135,7 @@ function WalletPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"><Stat label="Total bets" value={String(bets.length)} /><Stat label="Wins" value={String(wins)} /><Stat label="Losses" value={String(losses)} /><Stat label="Win rate" value={bets.length - wins - losses > 0 ? `${Math.round((wins / (bets.length - (bets.length - wins - losses))) * 100)}%` : bets.length > 0 ? `${Math.round((wins / bets.length) * 100)}%` : "—"} /><Stat label="Total wagered" value={`${amount(totalWagered, 18)} ETH`} /><Stat label="Stock rounds" value={String(rewards.length)} /></div>
     </div>
     <section className="mt-12"><SectionHeading eyebrow="On-chain rewards" title="Stock rewards">Each reward belongs to its original round and is claimed separately from the StockVault.</SectionHeading>
-      {!wallet.isCorrectNetwork ? <Panel className="mt-6"><p className="text-sm text-destructive">Switch to the supported network to view and claim stock rewards.</p></Panel> : loading ? <Panel className="mt-6">Loading reward rounds…</Panel> : error ? <Panel className="mt-6"><p className="text-sm text-destructive">{error}</p><button onClick={() => void refresh()} className="mt-4 text-sm text-primary">Try again</button></Panel> : rewards.length === 0 ? <Panel className="mt-6"><p className="text-sm text-muted-foreground">No eligible stock reward rounds yet. Winning rounds will appear here once the stock reward flow is available.</p></Panel> : <Panel className="mt-6 overflow-x-auto p-0">
+      {!wallet.isCorrectNetwork ? <Panel className="mt-6"><p className="text-sm text-destructive">Switch to the supported network to view and claim stock rewards.</p><div className="mt-4"><button onClick={() => void switchNetwork()} className="clip-tag border border-primary px-3 py-2 text-sm text-primary">Switch network</button></div></Panel> : loading ? <Panel className="mt-6">Loading reward rounds…</Panel> : error ? <Panel className="mt-6"><p className="text-sm text-destructive">{error}</p><button onClick={() => void refresh()} className="mt-4 text-sm text-primary">Try again</button></Panel> : rewards.length === 0 ? <Panel className="mt-6"><p className="text-sm text-muted-foreground">No eligible stock reward rounds yet. Winning rounds will appear here once the stock reward flow is available.</p></Panel> : <Panel className="mt-6 overflow-x-auto p-0">
         <table className="w-full min-w-[700px] text-left text-sm">
           <thead>
             <tr className="border-b border-border">

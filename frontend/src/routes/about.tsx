@@ -5,6 +5,7 @@ import React from "react";
 import { Panel, SectionHeading } from "@/components/panel";
 import { AlertTriangle } from "lucide-react";
 import { DEFAULT_EXPLORER_URL } from "@/services/blockchain/constants";
+import { shortAddress } from "@/lib/round";
 
 const deployedAddresses = [
   { label: "TraffIQ token", address: import.meta.env.VITE_RUSH_TOKEN_ADDRESS as string | undefined },
@@ -195,9 +196,10 @@ function About() {
                         href={`${DEFAULT_EXPLORER_URL}/address/${address}`}
                         target="_blank"
                         rel="noreferrer"
+                        title={address}
                         className="font-mono text-primary underline-offset-4 hover:underline"
                       >
-                        {address}
+                        {shortAddress(address)}
                       </a>
                       <span className="text-xs">Robinhood Blockscout ↗</span>
                     </li>
