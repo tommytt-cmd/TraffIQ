@@ -371,7 +371,7 @@ function Index() {
                       <td className="px-4 py-3 text-right">
                         {stock.address ? (
                           <a
-                            href={`https://blockscout.com/address/${stock.address}`}
+                            href={`https://robinhoodchain.blockscout.com/address/${stock.address}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-primary underline"
