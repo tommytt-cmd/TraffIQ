@@ -51,3 +51,34 @@ async def events_health(request: Request) -> dict[str, object]:
         "redis": await client.ping() if client is not None else False,
         "channels": ["game_events", "timer_events", "vehicle_events", "processing_events", "admin_events", "server_events", "heartbeat_events"],
     }
+
+
+@router.get("/stock-vault")
+async def stock_vault_health(request: Request) -> dict[str, object]:
+    """Report StockVault websocket listener health.
+
+    Returns connection status, whether the background task is running, and
+    the last processed block (if available).
+    """
+    indexer = getattr(request.app.state, "stock_vault_indexer", None)
+    task = getattr(request.app.state, "stock_vault_task", None)
+    connected = False
+    last_block = None
+    task_running = False
+    try:
+        if indexer is not None:
+            ws = getattr(indexer, "_ws", None)
+            if ws is not None:
+                connected = not getattr(ws, "closed", False)
+            last_block = getattr(indexer, "last_processed_block", None)
+        if task is not None:
+            task_running = not task.done()
+    except Exception:
+        pass
+
+    return {
+        "status": "healthy",
+        "connected": connected,
+        "task_running": task_running,
+        "last_processed_block": last_block,
+    }

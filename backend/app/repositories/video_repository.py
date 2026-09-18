@@ -111,6 +111,13 @@ class VideoRepository:
         await self.session.refresh(video)
         return video
 
+    async def update_status_for_all(self, status: VideoStatus) -> int:
+        """Reset all videos to the given status. Returns count of updated videos."""
+        stmt = update(Video).values(status=status.value)
+        result = await self.session.execute(stmt)
+        await self.session.commit()
+        return result.rowcount
+
     async def list_all(self) -> list[Video]:
         result = await self.session.execute(select(Video).order_by(Video.created_at.desc()))
         return list(result.scalars().all())

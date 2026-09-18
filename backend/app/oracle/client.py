@@ -81,7 +81,7 @@ class OracleClient:
             self.contract_json_path = self._resolve_contract_json_path(contract_json_path)
         else:
             self.contract_json_path = self._resolve_contract_json_path(
-                BACKEND_ROOT / "app" / "oracle" / "artifacts" / "RushBetting.json"
+                BACKEND_ROOT / "app" / "oracle" / "artifacts" / "TraffiqBetting.json"
             )
         self.private_key = private_key
         self.account = None
@@ -776,9 +776,25 @@ class OracleClient:
                 raise OracleConnectionError("Bet transaction value does not match requested amount")
 
             function, parameters = self.contract.decode_function_input(calldata)
-            if function.fn_name != "placeBet":
-                raise OracleConnectionError("Transaction is not a placeBet call")
-            if int(parameters["roundNumber"]) != round_number or int(parameters["side"]) != side:
+            print(f"DEBUG: Decoded tx function: {function.fn_name}, parameters: {parameters}")
+            # Accept either `placeBet` or `bet` function names depending on ABI variant
+            if function.fn_name not in ("placeBet", "bet"):
+                raise OracleConnectionError("Transaction is not a placeBet/bet call")
+
+            # Handle ABI parameter name differences across compiled artifacts
+            # Common names: roundNumber, roundId, round_id
+            round_param = None
+            for key in ("roundNumber", "roundId", "round_id", "round"):
+                if key in parameters:
+                    round_param = parameters[key]
+                    break
+            # Side param is commonly named 'side'
+            side_param = parameters.get("side") if "side" in parameters else None
+
+            if round_param is None or side_param is None:
+                raise OracleConnectionError("Bet transaction arguments missing roundNumber/side")
+
+            if int(round_param) != round_number or int(side_param) != side:
                 raise OracleConnectionError("Bet transaction arguments do not match the requested round or side")
         except OracleConnectionError:
             raise

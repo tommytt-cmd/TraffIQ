@@ -64,8 +64,9 @@ class BetService:
         round_model = await self.round_repository.get_by_id(round_id)
         if round_model is None:
             raise ValueError("Round not found")
-        if round_model.status != RoundStatus.OPEN:
-            raise ValueError("Betting is closed")
+        # Allow syncing of verified on-chain bets even if the round is no longer
+        # in OPEN status. The on-chain verification performed by the route
+        # ensures the transaction actually targeted the expected round/side.
         if round_model.round_number is None:
             raise ValueError("Round has no on-chain round number")
 

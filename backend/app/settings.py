@@ -32,12 +32,16 @@ class Settings:
     ORACLE_CONTRACT_ADDRESS: str = os.getenv("ORACLE_CONTRACT_ADDRESS", "")
     ORACLE_CONTRACT_JSON_PATH: str = os.getenv(
         "ORACLE_CONTRACT_JSON_PATH",
-        "app/oracle/artifacts/RushBetting.json",
+        "app/oracle/artifacts/TraffiqBetting.json",
     )
     ORACLE_PRIVATE_KEY: str = os.getenv("ORACLE_PRIVATE_KEY", "")
     STOCK_VAULT_ADDRESS: str = os.getenv("STOCK_VAULT_ADDRESS", "")
     STOCK_VAULT_START_BLOCK: int = int(os.getenv("STOCK_VAULT_START_BLOCK", "0"))
     RPC_URL: str = os.getenv("RPC_URL", os.getenv("ORACLE_RPC_URL", ""))
+    # WebSocket URL specifically for the stock vault (preferred for subscriptions)
+    VAULT_WS_URL: str = os.getenv("VAULT_WS_URL", "")
+    # Optional JSON-encoded headers for WebSocket connections, e.g. '{"Authorization":"Bearer ..."}'
+    VAULT_WS_HEADERS: str = os.getenv("VAULT_WS_HEADERS", "")
     CHAIN_ID: int = int(os.getenv("CHAIN_ID", os.getenv("ORACLE_CHAIN_ID", "0")))
 
     # The backend scheduler owns this workflow. It deliberately defaults to

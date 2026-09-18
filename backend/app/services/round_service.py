@@ -9,7 +9,7 @@ import random
 
 from web3 import Web3
 
-from app.core.enums import FinancialReconciliationStatus, RoundStatus, SettlementStatus
+from app.core.enums import FinancialReconciliationStatus, RoundStatus, SettlementStatus, VideoStatus
 from app.models.round import Round
 from app.models.round_transaction import RoundTransactionStatus, RoundTransactionType
 import uuid
@@ -84,10 +84,22 @@ class RoundService:
 
         # 2. Continue with your standard video assignment and metadata timing rules
         ready_video = await self.video_repository.get_ready()
+        
+        # If no ready videos available, recycle all videos back to READY
+        if ready_video is None:
+            logger.warning("no_ready_videos_available_recycling_all")
+            await self.video_repository.update_status_for_all(VideoStatus.READY)
+            # Try again to get a ready video
+            ready_video = await self.video_repository.get_ready()
+        
         if ready_video is not None:
             round_model.video_id = ready_video.id
             await self.round_repository.update(round_model)
+            # Mark video as IN_USE to prevent reuse in concurrent rounds
+            await self.video_repository.update_status(ready_video, VideoStatus.IN_USE)
             logger.info("round_assigned_video", extra={"round_id": str(round_model.id), "video_id": str(ready_video.id)})
+        else:
+            logger.error("no_videos_available_after_recycling")
 
         now = datetime.now(timezone.utc).replace(microsecond=0)
         round_model.starts_at = now
@@ -993,6 +1005,14 @@ class RoundService:
         round_model.status = RoundStatus.FINISHED
         round_model.result = result
         await self.round_repository.update(round_model)
+        
+        # Recycle video back to READY for reuse in next round
+        if round_model.video_id:
+            video = await self.video_repository.get_by_id(round_model.video_id)
+            if video is not None:
+                await self.video_repository.update_status(video, VideoStatus.READY)
+                logger.info("video_recycled", extra={"video_id": str(video.id), "round_id": str(round_model.id)})
+        
         logger.info("round_finished", extra={"round_id": str(round_model.id), "result": result})
         return round_model
     

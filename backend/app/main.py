@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+import asyncio
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.game import router as game_router
@@ -65,20 +66,36 @@ broadcaster = Broadcaster(manager)
 
 @app.on_event("startup")
 async def startup_event() -> None:
+    print("startup: before init_db")
     await init_db()
+    print("startup: after init_db")
     app.state.stock_vault_indexer = None
     if settings.RPC_URL and settings.STOCK_VAULT_ADDRESS:
         # Read-only indexing; this never has access to a user signing key.
         from app.database.session import SessionLocal as StockSessionLocal
         from app.services.stock_vault_indexer import StockVaultIndexer
 
+        # prefer a dedicated WS URL for vault subscriptions, fall back to RPC_URL
+        vault_ws = settings.VAULT_WS_URL or settings.RPC_URL
+        # parse optional headers JSON
+        import json as _json
+        ws_headers = None
+        if getattr(settings, "VAULT_WS_HEADERS", ""):
+            try:
+                ws_headers = _json.loads(settings.VAULT_WS_HEADERS)
+            except Exception:
+                ws_headers = None
+
         indexer = StockVaultIndexer(
             StockSessionLocal,
-            settings.RPC_URL,
+            vault_ws,
             settings.STOCK_VAULT_ADDRESS,
-            settings.STOCK_VAULT_START_BLOCK,
+            ws_headers=ws_headers,
         )
-        await indexer.sync_once()
+        # Start websocket listener in background so startup is non-blocking
+        print("startup: starting stock vault websocket listener")
+        task = asyncio.create_task(indexer.listen_forever())
+        app.state.stock_vault_task = task
         app.state.stock_vault_indexer = indexer
     from app.repositories.round_repository import RoundRepository
     from app.repositories.round_transaction_repository import RoundTransactionRepository
@@ -94,12 +111,17 @@ async def startup_event() -> None:
     timeline_repository = TimelineRepository(session)
 
     # setup Redis client (with dummy fallback)
+    print("startup: setup redis client")
     redis_client = RedisClient()
     try:
+        print("startup: attempting redis.connect")
         await redis_client.connect()
+        print("startup: redis.connect succeeded")
     except Exception:
+        print("startup: redis.connect failed, using DummyRedisClient")
         redis_client = DummyRedisClient()
         await redis_client.connect()
+        print("startup: dummy redis connected")
 
     # event bus and publisher
     event_bus = EventBus(redis_client, registry)
@@ -109,13 +131,19 @@ async def startup_event() -> None:
     subscriber = Subscriber(redis_client, event_bus)
     register_broadcaster_handlers(broadcaster, subscriber)
     if getattr(redis_client, "connected", False):
+        print("startup: starting subscriber")
         await subscriber.start()
+        print("startup: subscriber started")
 
     # monitoring publishers
     heartbeat = HeartbeatPublisher(publisher)
     server_status = ServerStatusPublisher(publisher, redis_client)
+    print("startup: starting heartbeat publisher")
     await heartbeat.start()
+    print("startup: heartbeat started")
+    print("startup: starting server status publisher")
     await server_status.start()
+    print("startup: server status started")
 
     # setup oracle client if configured
     app.state.oracle_client = None
@@ -183,14 +211,17 @@ async def startup_event() -> None:
     try:
         scheduler.replay_service = replay_srv
         replay_scheduler = ReplayScheduler(replay_srv, publisher=publisher)
+        print("startup: starting replay scheduler")
         await replay_scheduler.start()
-        print("replay scheduler start")
+        print("startup: replay scheduler started")
     except Exception as exc:
         replay_scheduler = None
         print(f"Replay Scheduler: {exc}")
 
     timer = EventTimer(scheduler=scheduler, publisher=publisher)
+    print("startup: starting event timer")
     await timer.start()
+    print("startup: event timer started")
 
     # store for shutdown
     app.state.redis_client = redis_client
@@ -245,5 +276,22 @@ async def shutdown_event() -> None:
     if rc is not None:
         try:
             await rc.disconnect()
+        except Exception:
+            pass
+    # stop stock vault listener if running
+    sv_task = getattr(app.state, "stock_vault_task", None)
+    sv_indexer = getattr(app.state, "stock_vault_indexer", None)
+    if sv_task is not None:
+        try:
+            sv_task.cancel()
+            try:
+                await sv_task
+            except asyncio.CancelledError:
+                pass
+        except Exception:
+            pass
+    if sv_indexer is not None:
+        try:
+            await sv_indexer.stop()
         except Exception:
             pass
