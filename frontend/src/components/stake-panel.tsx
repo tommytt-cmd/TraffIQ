@@ -157,13 +157,33 @@ export function StakePanel({ roundId, phase, roundNumber, threshold, pool }: Sta
       });
 
       try {
+        // Use the authoritative current round id from the backend to avoid
+        // syncing bets to an already-finished round (frontend clocks can be stale).
+        const apiBase = import.meta.env["VITE_GAME_API_URL"] ?? "http://localhost:8000";
+        let authoritativeRoundId = roundId;
+        try {
+          const r = await fetch(`${apiBase}/round/current`, { cache: "no-store" });
+          if (r.ok) {
+            const json = await r.json();
+            if (json && json.round && json.round.id) {
+              authoritativeRoundId = json.round.id;
+              console.debug("[StakePanel] using authoritativeRoundId from backend", authoritativeRoundId);
+            }
+          } else {
+            console.debug("[StakePanel] unable to fetch authoritative round id, falling back to prop", r.status);
+          }
+        } catch (err) {
+          console.debug("[StakePanel] error fetching authoritative round id, falling back to prop", err);
+        }
+
         await BetSyncService.syncTransaction({
           txHash: receipt.transactionHash,
           walletAddress: wallet.address,
-          roundId,
+          roundId: authoritativeRoundId,
           side: sideKey,
           amountEth: amount,
         });
+        console.log("[StakePanel] backend sync succeeded");
       } catch (error) {
         console.error("[StakePanel] backend sync failed after tx receipt", error);
         setBackendSyncError((error as Error).message || "Unable to sync bet with backend.");
@@ -223,7 +243,7 @@ export function StakePanel({ roundId, phase, roundNumber, threshold, pool }: Sta
           <p className="mt-2 font-display text-xl">
             {betting.amountEth} {ticker} · <span className={betting.side === "OVER" ? "text-emerald-500" : "text-rose-400"}>{betting.side}</span>
           </p>
-          {lockedMultiplier !== null && lockedReturn !== null ? (
+          {/*lockedMultiplier !== null && lockedReturn !== null ? (
             <p className="mt-2 text-sm text-muted-foreground">
               If this side wins: <span className="font-mono text-primary">{lockedMultiplier.toFixed(2)}×</span>
               <span className="mx-1">·</span>
@@ -231,9 +251,9 @@ export function StakePanel({ roundId, phase, roundNumber, threshold, pool }: Sta
             </p>
           ) : (
             <p className="mt-2 text-xs text-muted-foreground">Payout estimate will appear once the round pool is available.</p>
-          )}
+          )*/}
           <p className="mt-1 text-xs text-muted-foreground">This ETH pool share is used to purchase stock rewards, not paid as a direct ETH withdrawal. It uses current pools after the {protocolFeeBps / 100}% protocol fee; final pools can change until betting closes.</p>
-          <p className="mt-1 text-xs text-muted-foreground">Your bet is stored on the smart contract and will settle when the round closes.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Your bet is stored on the on-chain and will settle when the round closes.</p>
         </div>
       ) : (
         <>
