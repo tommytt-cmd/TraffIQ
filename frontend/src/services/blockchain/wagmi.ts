@@ -7,16 +7,16 @@ import {
 } from "@wagmi/connectors";
 import { defineChain } from "viem";
 
-const robinhoodRpcUrl =
+const elysiumRpcUrl =
   import.meta.env["VITE_ROBINHOOD_RPC_URL"] ?? "https://rpc-live.elysp.com";
-const robinhoodExplorerUrl =
+const elysiumExplorerUrl =
   import.meta.env["VITE_BLOCK_EXPLORER"] ?? "https://rpc-live.elysp.com";
-const robinhoodChainId = Number(
+const elysiumChainId = Number(
   import.meta.env["VITE_ROBINHOOD_CHAIN_ID"] ?? 46630,
 );
 
 export const robinhoodChain = defineChain({
-  id: robinhoodChainId,
+  id: elysiumChainId,
   name: "Elysium Chain",
   nativeCurrency: {
     name: "Ether",
@@ -25,13 +25,13 @@ export const robinhoodChain = defineChain({
   },
   rpcUrls: {
     default: {
-      http: [robinhoodRpcUrl],
+      http: [elysiumRpcUrl],
     },
   },
   blockExplorers: {
     default: {
       name: "Elysium Explorer",
-      url: robinhoodExplorerUrl,
+      url: elysiumExplorerUrl,
     },
   },
   testnet: false,
@@ -63,7 +63,6 @@ globalRuntime[runtimeKey] ??
     const connectors = {
       MetaMask: metaMask(),
       Coinbase: coinbaseWallet({ appName: "ElyRush" }),
-      // Target Rainbow explicitly instead of offering a catch-all injected provider.
       Rainbow: injected({
         shimDisconnect: true,
         target: {
@@ -94,10 +93,9 @@ globalRuntime[runtimeKey] ??
           connectors.Rainbow,
           connectors.WalletConnect,
         ],
-        // Do not auto-discover and append every browser-injected wallet.
         multiInjectedProviderDiscovery: false,
         transports: {
-          [robinhoodChain.id]: http(robinhoodRpcUrl),
+          [robinhoodChain.id]: http(elysiumRpcUrl),
         },
       }),
     };

@@ -7,9 +7,7 @@
       toast.success("Switched network in wallet.");
       return true;
     } catch (err: any) {
-      // 4902 = chain not added to wallet
       if (err?.code === 4902) {
-        // attempt to add chain (best-effort)
         try {
           await (window as any).ethereum.request({
             method: "wallet_addEthereumChain",

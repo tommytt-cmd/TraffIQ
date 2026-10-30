@@ -15,6 +15,7 @@ export const SUPPORTED_WALLETS = [
 export const WALLET_LOCAL_STORAGE_KEY = "rush.wallet.lastConnected";
 
 export const CHAIN_KEYS = {
+  ELYSIUM: "ELYSIUM",
   ROBINHOOD: "ROBINHOOD",
 } as const;
 
@@ -39,6 +40,8 @@ export const ROBINHOOD_CHAIN_INFO = {
     decimals: 18,
   },
 };
+
+export const ELYSIUM_CHAIN_INFO = ROBINHOOD_CHAIN_INFO;
 
 export const CHAIN_PARAMS = {
   chainId: `0x${DEFAULT_CHAIN_ID.toString(16)}`,
