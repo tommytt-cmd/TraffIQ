@@ -9,13 +9,6 @@ import {
 import { useAccount, useConnect, type Connector } from "wagmi";
 import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
-import {
-  WalletCoinbase,
-  WalletMetamask,
-  WalletRainbow,
-  WalletWalletConnect,
-} from "@web3icons/react";
-
 import { walletStore } from "@/lib/store";
 
 interface WalletModalContextValue {
@@ -37,7 +30,6 @@ interface WalletMeta {
   blurb: string;
   accent: string;
   glyph: string;
-  icon?: ReactNode;
 }
 
 const META: Record<string, WalletMeta> = {
@@ -46,42 +38,36 @@ const META: Record<string, WalletMeta> = {
     blurb: "Open in Rainbow app",
     accent: "#1b2c5a",
     glyph: "R",
-    icon: <WalletRainbow size={40} variant="branded" />,
   },
   rainbow: {
     label: "Rainbow",
     blurb: "Open in Rainbow app",
     accent: "#1b2c5a",
     glyph: "R",
-    icon: <WalletRainbow size={40} variant="branded" />,
   },
   walletConnect: {
     label: "WalletConnect",
     blurb: "Rainbow, Trust, and 300+ wallets",
     accent: "#1d7cf2",
     glyph: "◉",
-    icon: <WalletWalletConnect size={40} variant="background" />,
   },
   coinbaseWalletSDK: {
     label: "Coinbase Wallet",
     blurb: "Open in Coinbase Wallet app",
     accent: "#0052ff",
     glyph: "◍",
-    icon: <WalletCoinbase size={40} variant="branded" />,
   },
   "io.metamask": {
     label: "MetaMask",
     blurb: "Open in MetaMask app",
     accent: "#3a1e0d",
     glyph: "M",
-    icon: <WalletMetamask size={40} variant="branded" />
   },
   metaMask: {
     label: "MetaMask",
     blurb: "Open in MetaMask app",
     accent: "#3a1e0d",
     glyph: "M",
-    icon: <WalletMetamask size={40} variant="branded" />
   },
 };
 
@@ -113,7 +99,7 @@ function WalletLogo({ meta }: { meta: WalletMeta }) {
       style={{ backgroundColor: meta.accent }}
       aria-hidden
     >
-      {meta.icon}
+      <span className="leading-none">{meta.glyph}</span>
     </span>
   );
 }

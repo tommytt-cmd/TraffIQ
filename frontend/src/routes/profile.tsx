@@ -28,13 +28,13 @@ const fetchJson = async (url: string) => {
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "Profile — TRAFFIC Player Activity" },
+      { title: "Profile — ElyRush Player Activity" },
       {
         name: "description",
         content:
-          "View your TRAFFIC activity, betting history, achievements, and market stats from your connected wallet.",
+          "View your ElyRush activity, betting history, achievements, and market stats from your connected wallet.",
       },
-      { property: "og:title", content: "Profile — TRAFFIC Player Activity" },
+      { property: "og:title", content: "Profile — ElyRush Player Activity" },
       {
         property: "og:description",
         content: "Access your betting history, win rate, recent activity and profile summary for your connected wallet.",

@@ -20,7 +20,7 @@ const erc20MetadataAbi = [
   { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
 ] as const;
 
-export const Route = createFileRoute("/wallet")({ head: () => ({ meta: [{ title: "Wallet — TRAFFIC" }] }), component: WalletPage });
+export const Route = createFileRoute("/wallet")({ head: () => ({ meta: [{ title: "Wallet — ElyRush" }] }), component: WalletPage });
 
 function WalletPage() {
   const wallet = useWallet();

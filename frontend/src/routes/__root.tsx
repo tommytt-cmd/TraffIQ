@@ -87,13 +87,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "TRAFFIC — Live Vehicle Count Markets" },
+      { title: "ElyRush — Live Vehicle Count Markets" },
       {
         name: "description",
         content:
           "Stake under or over on live junction vehicle counts across betting, locked, live and settling phases.",
       },
-      { property: "og:title", content: "TRAFFIC — Live Vehicle Count Markets" },
+      { property: "og:title", content: "ElyRush — Live Vehicle Count Markets" },
       {
         property: "og:description",
         content: "Under/over prediction markets on live traffic camera vehicle counts.",

@@ -8,7 +8,7 @@ import { DEFAULT_EXPLORER_URL } from "@/services/blockchain/constants";
 import { shortAddress } from "@/lib/round";
 
 const deployedAddresses = [
-  { label: "TraffIQ token", address: import.meta.env.VITE_RUSH_TOKEN_ADDRESS as string | undefined },
+  { label: "ElyRush token", address: import.meta.env.VITE_RUSH_TOKEN_ADDRESS as string | undefined },
   { label: "Prediction market", address: import.meta.env.VITE_BETTING_CONTRACT_ADDRESS as string | undefined },
   { label: "Protocol treasury", address: import.meta.env.VITE_RUSH_TREASURY_ADDRESS as string | undefined },
   { label: "Stock treasury", address: import.meta.env.VITE_STOCK_TREASURY_ADDRESS as string | undefined },
@@ -18,13 +18,13 @@ const deployedAddresses = [
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About TRAFFIQ — Vehicle Count Prediction Markets" },
+      { title: "About ElyRush — Vehicle Count Prediction Markets" },
       {
         name: "description",
         content:
-          "TRAFFIC is an on-chain under/over vehicle-count prediction market where winning positions receive pro-rata allocations of the round's purchased stock tokens.",
+          "ElyRush is an on-chain under/over vehicle-count prediction market where winning positions receive pro-rata allocations of the round's purchased stock tokens.",
       },
-      { property: "og:title", content: "About TRAFFIC — Vehicle Count Prediction Markets" },
+      { property: "og:title", content: "About ElyRush — Vehicle Count Prediction Markets" },
       {
         property: "og:description",
         content: "How vehicle-count rounds, stock-token rewards and protocol buybacks work on-chain.",
@@ -82,9 +82,9 @@ function About() {
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       <div className="mb-8">
         <p className="label-tech">About</p>
-        <h1 className="mt-3 max-w-3xl text-4xl leading-[0.95] sm:text-5xl">TraffIQ</h1>
+        <h1 className="mt-3 max-w-3xl text-4xl leading-[0.95] sm:text-5xl">ElyRush</h1>
         <p className="mt-4 max-w-2xl text-sm text-muted-foreground">
-          TraffIQ is an on-chain under/over vehicle-count prediction market. Each market has a
+          ElyRush is an on-chain under/over vehicle-count prediction market. Each market has a
           published threshold, a betting deadline, and a final count submitted by the designated
           result publisher. Eligible winning positions share the stock tokens bought for that market
           in proportion to their winning stake.
@@ -180,8 +180,8 @@ function About() {
           <section id="utility">
             <SectionHeading eyebrow="Token" title="Tokenomics" />
             <p>
-              TraffIQ is the protocol token used by the treasury's buyback mechanism. In this version,
-              TraffIQ bought with settlement-fee funds is burned. No settlement-fee TraffIQ is directed
+              ElyRush is the protocol token used by the treasury's buyback mechanism. In this version,
+              ElyRush bought with settlement-fee funds is burned. No settlement-fee ElyRush is directed
               to staking in the current release; a staking allocation is planned for a future
               version. This is not a promise of yield or governance rights.
             </p>

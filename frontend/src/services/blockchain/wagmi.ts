@@ -64,7 +64,7 @@ const runtime =
   (() => {
     const connectors = {
       MetaMask: metaMask(),
-      Coinbase: coinbaseWallet({ appName: "TRAFFIC" }),
+      Coinbase: coinbaseWallet({ appName: "ElyRush" }),
       // Target Rainbow explicitly instead of offering a catch-all injected provider.
       Rainbow: injected({
         shimDisconnect: true,

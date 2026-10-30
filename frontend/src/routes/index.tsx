@@ -29,13 +29,13 @@ type RobinhoodPriceResponse = {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "TRAFFIQ — Live Vehicle Count Under/Over Markets" },
+      { title: "ElyRush — Live Vehicle Count Under/Over Markets" },
       {
         name: "description",
         content:
           "Stake under or over the vehicle threshold on live junction camera counts. Betting, locked, live and settling phases every three minutes.",
       },
-      { property: "og:title", content: "TRAFFIQ — Live Vehicle Count Under/Over Markets" },
+      { property: "og:title", content: "ElyRush — Live Vehicle Count Under/Over Markets" },
       {
         property: "og:description",
         content:
@@ -154,15 +154,7 @@ function Index() {
       <section className="relative border-b border-border">
         <div className="relative mx-auto max-w-7xl px-4 pt-8 pb-12 sm:px-6">
           <h1 className="mt-3 max-w-3xl text-4xl leading-[0.95] sm:text-6xl">
-              Traff<span className="text-primary ">I<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 300" fill="none" className="inline-block -mt-1 w-[28px] h-[37px] sm:w-[47px] sm:h-[58px]">
-                        <path d=" M 65 20 H 155 C 190 20 205 40 205 75 V 215 C 205 250 190 270 155 270 H 65 C 30 270 15 250 15 215 V 75 C 15 40 30 20 65 20 Z M 65 65 C 52 65 45 72 45 85 V 205 C 45 218 52 225 65 225 H 155 C 168 225 175 218 175 205 V 85 C 175 72 168 65 155 65 Z " fill="#A8FF19" fill-rule="evenodd" />
-                        <path d=" M 145 225 L 205 285 L 175 315 L 115 255 Z " fill="#A8FF19" />
-                        <rect x="75" y="85" width="70" height="130" rx="16" fill="#050807" />
-                        <rect x="68" y="98" width="88" height="18" rx="14" fill="#FF315D" />
-                        <rect x="68" y="136" width="88" height="18" rx="14" fill="#FFC84A" />
-                        <rect x="68" y="174" width="88" height="18" rx="14" fill="#49C99B" />
-                      </svg>
-                    </span> — Live vehicle-count prediction markets
+            <span className="text-primary">Ely</span>Rush — Live vehicle-count prediction markets
           </h1>
           <p className="mt-4 max-w-md text-sm text-muted-foreground">
             Place under/over stakes on verified junction vehicle counts. Rounds are settled
