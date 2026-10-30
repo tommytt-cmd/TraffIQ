@@ -25,7 +25,6 @@ type RobinhoodPriceResponse = {
   quotes: RobinhoodQuote[];
 };
 
-
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -65,6 +64,8 @@ function Index() {
     staleTime: 30_000,
     refetchInterval: 30_000,
   });
+
+  /*
   const supportedStocksQuery = useQuery({
     queryKey: ["supported-stocks"],
     queryFn: async () => {
@@ -104,7 +105,6 @@ function Index() {
             const res = await fetch(url, { cache: "no-store" });
             if (!res.ok) {
               const body = await res.text();
-              // Preserve error details for debugging
               console.error("Stock price request failed", { symbol: symNorm, status: res.status, body });
               return { symbol: symNorm, quote: null };
             }
@@ -122,7 +122,7 @@ function Index() {
     staleTime: 15_000,
     refetchInterval: 15_000,
   });
-
+  */
 
   const settledRoundNumberRef = useRef<number | null>(null);
   const previousRoundNumberRef = useRef<number>(loop.roundNumber);
@@ -144,13 +144,10 @@ function Index() {
     if (p && Array.isArray((p as any).items)) return (p as any).items as Array<any>;
     return [] as Array<any>;
   }) ?? [];
-  const settleData = loop.phase === 'settle' && loop.lastWinner ? loop.lastWinner : null;
-
-  //const viewportVehicleCount = loop.phase === 'live' ? liveVehicleCount : loop.vehicleCount;
+  const settleData = loop.phase === "settle" && loop.lastWinner ? loop.lastWinner : null;
 
   return (
     <div>
-      {/* HERO */}
       <section className="relative border-b border-border">
         <div className="relative mx-auto max-w-7xl px-4 pt-8 pb-12 sm:px-6">
           <h1 className="mt-3 max-w-3xl text-4xl leading-[0.95] sm:text-6xl">
@@ -158,8 +155,8 @@ function Index() {
           </h1>
           <p className="mt-4 max-w-md text-sm text-muted-foreground">
             Place under/over stakes on verified junction vehicle counts. Rounds are settled
-            against the submitted result and on-chain rules. Winning positions receive a pro-rata
-            share of the stock tokens bought for their market.
+            against the submitted result and on-chain rules. Winning positions receive the
+            market payout based on the settlement outcome.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <a
@@ -175,32 +172,9 @@ function Index() {
               How it works
             </Link>
           </div>
-          {/*<div className="mt-6 max-w-2xl">
-            <p className="label-tech">Supported stock rewards</p>
-            {supportedStocksQuery.isLoading ? (
-              <p className="mt-2 text-sm text-muted-foreground">Loading supported stocks…</p>
-            ) : supportedStocksQuery.data && supportedStocksQuery.data.length > 0 ? (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {supportedStocksQuery.data.map((stock) => (
-                  <span
-                    key={stock.address}
-                    title={stock.name ?? stock.symbol}
-                    className="clip-tag border border-primary/40 bg-primary/10 px-3 py-1.5 font-mono text-xs text-primary"
-                  >
-                    {stock.symbol}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="mt-2 text-sm text-muted-foreground">
-                Supported stock rewards will appear here once they are available.
-              </p>
-            )}
-          </div>*/}
         </div>
       </section>
 
-      {/* LIVE MARKET */}
       <section id="market" className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
         {loop.isLoading ? (
           <div className="panel flex min-h-[360px] items-center justify-center p-8 text-center">
@@ -217,41 +191,37 @@ function Index() {
             <PhaseStatus phase={loop.phase} remaining={loop.secondsLeft} totalForPhase={loop.totalForPhase} />
 
             <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-          <div className="grid gap-4 content-start">
-            <LiveStream
-              phase={loop.phase}
-              //vehicleCount={viewportVehicleCount}
-              settleData={settleData}
-              threshold={loop.threshold}
-              videoUrl={loop.videoUrl}
-              playbackTime={loop.playbackTime}
-              locationName={loop.locationName}
-              timelineEvents={loop.timelineEvents}
-            />
+              <div className="grid gap-4 content-start">
+                <LiveStream
+                  phase={loop.phase}
+                  settleData={settleData}
+                  threshold={loop.threshold}
+                  videoUrl={loop.videoUrl}
+                  playbackTime={loop.playbackTime}
+                  locationName={loop.locationName}
+                  timelineEvents={loop.timelineEvents}
+                />
 
-            <div className="mt-1 flex items-start gap-2 max-w-xl text-sm text-muted-foreground">
-              <AlertTriangle className="h-4 w-4 text-warning mt-0.5" />
-              <span>AI counting can be inaccurate on low-light, occluded, or poor-weather footage</span>
-            </div>
+                <div className="mt-1 flex items-start gap-2 max-w-xl text-sm text-muted-foreground">
+                  <AlertTriangle className="h-4 w-4 text-warning mt-0.5" />
+                  <span>AI counting can be inaccurate on low-light, occluded, or poor-weather footage</span>
+                </div>
+              </div>
 
-            {/*<div className="grid gap-4 sm:grid-cols-3" />*/}
-          </div>
-
-          <StakePanel
-            key={loop.roundId || loop.roundNumber}
-            roundId={loop.roundId}
-            phase={loop.phase}
-            roundNumber={loop.roundNumber}
-            threshold={loop.threshold}
-            pool={loop.pool}
-          />
+              <StakePanel
+                key={loop.roundId || loop.roundNumber}
+                roundId={loop.roundId}
+                phase={loop.phase}
+                roundNumber={loop.roundNumber}
+                threshold={loop.threshold}
+                pool={loop.pool}
+              />
             </div>
           </>
         )}
 
-        {/* HISTORY */}
         <div className="mt-14">
-            <SectionHeading eyebrow="Settled rounds" title="Recent settled rounds">
+          <SectionHeading eyebrow="Settled rounds" title="Recent settled rounds">
             Each round settles to the verified junction vehicle count. Results and settlement
             data are public and reproducible.
           </SectionHeading>
@@ -300,7 +270,7 @@ function Index() {
           </div>
         </div>
 
-        {/* Stock */}
+        {/*
         <div className="mt-14">
           <SectionHeading eyebrow="Supported stocks" title="Supported Stock Tokens">
             Listed stock token assets and live quotes (raw underlying, not multiplier-adjusted).
@@ -323,7 +293,6 @@ function Index() {
                     </td>
                   </tr>
                 ) : (supportedStocksQuery.data ?? []).map((stock) => {
-                  // Check if prices are still loading for the first time
                   const isPricesLoading = rhjPricesQuery.isLoading || (rhjPricesQuery.isFetching && !rhjPricesQuery.data);
                   const price = rhjPricesQuery.data?.[stock.symbol.toUpperCase()];
                   const asset = (rhjAssetsQuery.data ?? []).find((a: any) => a.tokenSymbol === stock.symbol);
@@ -333,7 +302,6 @@ function Index() {
                     <tr key={stock.address} className="border-b border-border/60 last:border-0">
                       <td className="px-4 py-3 flex items-center gap-3">
                         {logoUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
                           <img src={logoUrl} alt={stock.symbol} className="h-6 w-6 rounded" />
                         ) : (
                           <div className="h-6 w-6 rounded bg-muted" />
@@ -348,12 +316,12 @@ function Index() {
                           (() => {
                             const bid = parseFloat(price.bid ?? NaN);
                             const ask = parseFloat(price.ask ?? NaN);
-                            const mid = Number.isFinite(bid) && Number.isFinite(ask) 
-                              ? ((bid + ask) / 2) 
+                            const mid = Number.isFinite(bid) && Number.isFinite(ask)
+                              ? ((bid + ask) / 2)
                               : Number.isFinite(bid) ? bid : Number.isFinite(ask) ? ask : null;
-                            
-                            return mid !== null 
-                              ? mid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
+
+                            return mid !== null
+                              ? mid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                               : "—";
                           })()
                         ) : (
@@ -368,7 +336,7 @@ function Index() {
                             rel="noopener noreferrer"
                             className="text-primary underline"
                           >
-                            View asset 
+                            View asset
                           </a>
                         ) : (
                           <span className="text-sm text-muted-foreground">—</span>
@@ -382,9 +350,13 @@ function Index() {
             </table>
           </div>
         </div>
+        */}
 
-
-        {/* Demo notice removed for production */}
+        <div className="mt-14">
+          <SectionHeading eyebrow="How it works" title="The market flow">
+            Rounds open to participants, settle against the verified count, and resolve based on the final on-chain result.
+          </SectionHeading>
+        </div>
       </section>
     </div>
   );
