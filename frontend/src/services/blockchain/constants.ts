@@ -18,21 +18,19 @@ export const CHAIN_KEYS = {
   ROBINHOOD: "ROBINHOOD",
 } as const;
 
-// Keep this fallback aligned with the deployed Robinhood testnet configuration.
+// Keep this fallback aligned with the deployed Elysium chain configuration.
 // Production deployments must still provide VITE_ROBINHOOD_CHAIN_ID explicitly.
 export const DEFAULT_CHAIN_ID = Number(
   import.meta.env.VITE_ROBINHOOD_CHAIN_ID ?? 46630,
 );
 export const DEFAULT_RPC_URL =
-  import.meta.env.VITE_ROBINHOOD_RPC_URL ??
-  "https://rpc.mainnet.chain.robinhood.com";
+  import.meta.env.VITE_ROBINHOOD_RPC_URL ?? "https://rpc-live.elysp.com";
 export const DEFAULT_EXPLORER_URL =
-  import.meta.env.VITE_BLOCK_EXPLORER ??
-  "https://robinhoodchain.blockscout.com";
+  import.meta.env.VITE_BLOCK_EXPLORER ?? "https://rpc-live.elysp.com";
 
 export const ROBINHOOD_CHAIN_INFO = {
   chainId: DEFAULT_CHAIN_ID,
-  chainName: "Robinhood Chain",
+  chainName: "Elysium Chain",
   rpcUrl: DEFAULT_RPC_URL,
   explorerUrl: DEFAULT_EXPLORER_URL,
   nativeCurrency: {

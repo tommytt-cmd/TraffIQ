@@ -8,18 +8,16 @@ import {
 import { defineChain } from "viem";
 
 const robinhoodRpcUrl =
-  import.meta.env["VITE_ROBINHOOD_RPC_URL"] ??
-  "https://rpc.testnet.chain.robinhood.com";
+  import.meta.env["VITE_ROBINHOOD_RPC_URL"] ?? "https://rpc-live.elysp.com";
 const robinhoodExplorerUrl =
-  import.meta.env["VITE_BLOCK_EXPLORER"] ??
-  "https://explorer.testnet.chain.robinhood.com";
+  import.meta.env["VITE_BLOCK_EXPLORER"] ?? "https://rpc-live.elysp.com";
 const robinhoodChainId = Number(
   import.meta.env["VITE_ROBINHOOD_CHAIN_ID"] ?? 46630,
 );
 
 export const robinhoodChain = defineChain({
   id: robinhoodChainId,
-  name: "Robinhood Chain",
+  name: "Elysium Chain",
   nativeCurrency: {
     name: "Ether",
     symbol: "ETH",
@@ -32,7 +30,7 @@ export const robinhoodChain = defineChain({
   },
   blockExplorers: {
     default: {
-      name: "Robinhood Explorer",
+      name: "Elysium Explorer",
       url: robinhoodExplorerUrl,
     },
   },
@@ -60,7 +58,7 @@ const globalRuntime = globalThis as typeof globalThis & {
 // Vite HMR re-evaluates this module during development. Reusing the runtime
 // prevents WalletConnect Core from being initialized once per hot reload.
 const runtime =
-  globalRuntime[runtimeKey] ??
+globalRuntime[runtimeKey] ??
   (() => {
     const connectors = {
       MetaMask: metaMask(),
