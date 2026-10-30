@@ -81,7 +81,10 @@ Add any of these override values to `backend/.env`:
 BETTING_DURATION_SECONDS=15
 REPLAY_DURATION_SECONDS=15
 RESULT_DURATION_SECONDS=15
+ONCHAIN_INTERACTION_ENABLED=false
 ```
+
+`ONCHAIN_INTERACTION_ENABLED` controls backend round interaction with the ElyRush contract. Set it to `false` to create, open, lock, settle, and finish rounds using local backend state only; the backend will not initialize an RPC contract client. Set it to `true` to enable on-chain round creation and result submission (and transaction verification). When unset, it falls back to the legacy `ORACLE_ENABLED` value.
 
 ## File logging
 

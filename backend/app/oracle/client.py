@@ -81,7 +81,7 @@ class OracleClient:
             self.contract_json_path = self._resolve_contract_json_path(contract_json_path)
         else:
             self.contract_json_path = self._resolve_contract_json_path(
-                BACKEND_ROOT / "app" / "oracle" / "artifacts" / "TraffiqBetting.json"
+                BACKEND_ROOT / "app" / "oracle" / "artifacts" / "ElyRushBetting.json"
             )
         self.private_key = private_key
         self.account = None
@@ -466,45 +466,22 @@ class OracleClient:
         except OracleConnectionError:
             return None
 
-    def get_claim_status(self, player_address: str) -> str:
-        return str(self.call_readonly("getClaimStatus", Web3.to_checksum_address(player_address)))
-
-    def get_claimable_eth(self, player_address: str) -> int:
-        return int(self.call_readonly("getClaimableEth", Web3.to_checksum_address(player_address)))
-
-    def get_claimable_reward(self, player_address: str) -> int:
-        return int(self.call_readonly("getClaimableReward", Web3.to_checksum_address(player_address)))
-
     def get_pending_reward(self, round_number: int, player_address: str) -> int:
         return int(self.call_readonly("pendingReward", round_number, Web3.to_checksum_address(player_address)))
 
     def has_claimed(self, round_number: int, player_address: str) -> bool:
-        return bool(self.call_readonly("hasClaimed", round_number, Web3.to_checksum_address(player_address)))
+        return bool(self.call_readonly("winningsClaimed", round_number, Web3.to_checksum_address(player_address)))
 
     def has_rush_claimed(self, round_number: int, player_address: str) -> bool:
-        if not self.is_connected():
-            raise OracleConnectionError("RPC provider is not connected")
-
-        try:
-            event_filter = self.contract.events.RushClaimed().get_logs(
-                fromBlock=0,
-                toBlock=self.get_latest_block(),
-                argument_filters={"winner": Web3.to_checksum_address(player_address)},
-            )
-        except Exception as exc:
-            raise OracleConnectionError(f"Failed while fetching RushClaimed logs: {exc}") from exc
-
-        return any(int(log["args"]["roundNumber"]) == round_number for log in event_filter)
+        # The refactored contract pays native HYPE through claimWinnings and has
+        # no separate Rush-token claim flow.
+        return self.has_claimed(round_number, player_address)
 
     def get_user_bet(self, round_number: int, player_address: str) -> tuple[int, int]:
-        result = self.call_readonly("getUserBet", round_number, Web3.to_checksum_address(player_address))
-        if hasattr(result, "__len__"):
-            return int(result[0]), int(result[1])
-        return int(result["overAmount"] if "overAmount" in result else 0), int(result["underAmount"] if "underAmount" in result else 0)
-
-    def get_round_participants(self, round_number: int) -> list[str]:
-        participants = self.call_readonly("getRoundParticipants", round_number)
-        return [str(x).lower() for x in participants]
+        wallet = Web3.to_checksum_address(player_address)
+        over = self.call_readonly("userBets", round_number, wallet, 0)
+        under = self.call_readonly("userBets", round_number, wallet, 1)
+        return int(over), int(under)
 
     def get_protocol_fee_bps(self) -> int:
         # protocolFeeBps is a public Solidity variable, so its generated getter

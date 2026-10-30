@@ -24,7 +24,6 @@ from app.settings import settings
 from app.scheduler.timer import EventTimer
 from app.services.round_service import RoundService
 from app.services.settlement_service import SettlementService
-from app.services.round_buyback_service import RoundBuybackService
 from app.websocket.manager import manager
 from app.websocket.router import router as websocket_router
 
@@ -148,9 +147,9 @@ async def startup_event() -> None:
     # setup oracle client if configured
     app.state.oracle_client = None
     oracle_client = None
-    if settings.ORACLE_ENABLED:
+    if settings.ONCHAIN_INTERACTION_ENABLED:
         if not settings.ORACLE_PRIVATE_KEY:
-            raise RuntimeError("ORACLE_ENABLED is true but ORACLE_PRIVATE_KEY is not configured")
+            raise RuntimeError("ONCHAIN_INTERACTION_ENABLED is true but ORACLE_PRIVATE_KEY is not configured")
         oracle_client = OracleClient(
             settings.ORACLE_RPC_URL,
             settings.ORACLE_CONTRACT_ADDRESS,
@@ -194,14 +193,10 @@ async def startup_event() -> None:
         round_repository,
         BetRepository(session),
     )
-    buyback_service = None
-    if settings.BUYBACK_ENABLED:
-        buyback_service = RoundBuybackService(round_repository, oracle_client)
     scheduler = GameScheduler(
         round_service,
         publisher=publisher,
         settlement_service=settlement_service,
-        buyback_service=buyback_service,
     )
     # wire replay service and scheduler
     replay_srv = ReplayService(

@@ -18,8 +18,6 @@ from app.events.schemas import (
 )
 from app.services.round_service import RoundService
 from app.services.settlement_service import SettlementService
-from app.services.round_buyback_service import RoundBuybackService
-from app.settings import settings
 
 # optional replay integration
 try:
@@ -42,12 +40,10 @@ class GameScheduler:
         round_service: RoundService,
         publisher: Publisher | None = None,
         settlement_service: SettlementService | None = None,
-        buyback_service: RoundBuybackService | None = None,
     ) -> None:
         self.round_service = round_service
         self.publisher = publisher
         self.settlement_service = settlement_service
-        self.buyback_service = buyback_service
         self.replay_service: ReplayService | None = None
 
     async def tick(self) -> None:
@@ -345,25 +341,6 @@ class GameScheduler:
                             current.id,
                             winner_side=1 if winner == "OVER" else 0,
                         )
-
-                    # RushBetting marks the on-chain round FINISHED during
-                    # settleRound. The backend's FINISHED state instead means
-                    # all financial work, including the buyback, is complete.
-                    print(f"Buyback service: {self.buyback_service is not None}")
-                    if self.buyback_service is not None:
-                        try:
-                            buyback_complete = await self.buyback_service.process_round(current)
-                            await self.round_service.round_repository.update(current)
-                            print(f"Buyback complete: {buyback_complete}")
-                        except Exception as exc:
-                            current.buyback_status = "FAILED"
-                            current.buyback_error_message = str(exc)
-                            current.buyback_attempts += 1
-                            await self.round_service.round_repository.update(current)
-                            print(f"Buyback failed for round {current.id}: {exc}")
-                            return
-                        if not buyback_complete:
-                            return
 
                     if current.ends_at is not None:
                         now = datetime.now(timezone.utc).replace(microsecond=0)

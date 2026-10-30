@@ -26,13 +26,19 @@ class Settings:
     SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
     SUPABASE_BUCKET: str = os.getenv("SUPABASE_BUCKET", "processed-videos")
 
+    # ONCHAIN_INTERACTION_ENABLED is the master switch for backend round
+    # lifecycle RPC calls and transaction submission. Fall back to the legacy
+    # ORACLE_ENABLED setting when the new variable is not provided.
+    ONCHAIN_INTERACTION_ENABLED: bool = os.getenv(
+        "ONCHAIN_INTERACTION_ENABLED", os.getenv("ORACLE_ENABLED", "false")
+    ).lower() in ("1", "true", "yes")
     ORACLE_ENABLED: bool = os.getenv("ORACLE_ENABLED", "false").lower() in ("1", "true", "yes")
     ORACLE_RPC_URL: str = os.getenv("ORACLE_RPC_URL", "")
     ORACLE_CHAIN_ID: int = int(os.getenv("ORACLE_CHAIN_ID", "0"))
     ORACLE_CONTRACT_ADDRESS: str = os.getenv("ORACLE_CONTRACT_ADDRESS", "")
     ORACLE_CONTRACT_JSON_PATH: str = os.getenv(
         "ORACLE_CONTRACT_JSON_PATH",
-        "app/oracle/artifacts/TraffiqBetting.json",
+        "app/oracle/artifacts/ElyRushBetting.json",
     )
     ORACLE_PRIVATE_KEY: str = os.getenv("ORACLE_PRIVATE_KEY", "")
     STOCK_VAULT_ADDRESS: str = os.getenv("STOCK_VAULT_ADDRESS", "")

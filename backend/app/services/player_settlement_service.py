@@ -50,13 +50,6 @@ class PlayerSettlementService:
                 if player is not None:
                     wallet_addresses.add(player.wallet_address)
 
-        if self.oracle_client is not None and round_model.round_number is not None:
-            try:
-                participants = await self._get_round_participants(round_model.round_number)
-                wallet_addresses.update(participants)
-            except Exception as exc:
-                logger.warning("failed_to_load_round_participants", extra={"round_id": str(round_id), "error": str(exc)})
-
         wallet_addresses = {wallet for wallet in wallet_addresses if wallet}
 
         settlements: list[PlayerSettlement] = []
@@ -80,7 +73,7 @@ class PlayerSettlementService:
 
         claim_status = None
         claimable_eth = None
-        claimable_reward = None
+        claimable_reward = 0
         pending_eth = None
         rush_claimed = None
         has_claimed = False
@@ -88,12 +81,11 @@ class PlayerSettlementService:
         under_amount = None
 
         if self.oracle_client is not None and round_model.round_number is not None:
-            claim_status = await asyncio.to_thread(self.oracle_client.get_claim_status, normalized_wallet)
-            claimable_eth = await asyncio.to_thread(self.oracle_client.get_claimable_eth, normalized_wallet)
-            claimable_reward = await asyncio.to_thread(self.oracle_client.get_claimable_reward, normalized_wallet)
             pending_eth = await asyncio.to_thread(self.oracle_client.get_pending_reward, int(round_model.round_number), normalized_wallet)
             has_claimed = await asyncio.to_thread(self.oracle_client.has_claimed, int(round_model.round_number), normalized_wallet)
-            rush_claimed = await asyncio.to_thread(self.oracle_client.has_rush_claimed, int(round_model.round_number), normalized_wallet)
+            claimable_eth = 0 if has_claimed else pending_eth
+            claim_status = "CLAIMED" if has_claimed else "AVAILABLE" if pending_eth > 0 else "NOT_WINNER"
+            rush_claimed = None
             over_amount, under_amount = await asyncio.to_thread(self.oracle_client.get_user_bet, int(round_model.round_number), normalized_wallet)
 
         bet_prediction = bet.prediction if bet is not None else None
@@ -124,10 +116,6 @@ class PlayerSettlementService:
         settlement = await self.player_settlement_repository.create_or_update(settlement)
         await self._publish_player_settlement_updated(settlement)
         return settlement
-
-    async def _get_round_participants(self, round_number: int) -> list[str]:
-        participants = await asyncio.to_thread(self.oracle_client.get_round_participants, round_number)
-        return [participant.lower() for participant in participants]
 
     async def _publish_player_settlement_updated(self, settlement: PlayerSettlement) -> None:
         if self.publisher is None:

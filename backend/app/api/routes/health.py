@@ -18,7 +18,7 @@ async def health(request: Request) -> dict[str, object]:
         except Exception:
             pass
     oracle_ok = False
-    if settings.ORACLE_ENABLED:
+    if settings.ONCHAIN_INTERACTION_ENABLED:
         oracle_client = getattr(request.app.state, "oracle_client", None)
         if oracle_client is not None:
             try:
