@@ -179,12 +179,12 @@ function Index() {
         <div className="flex items-center gap-3 border border-warning/60 bg-warning/15 px-4 py-3 text-warning-foreground">
           <AlertTriangle className="h-5 w-5 shrink-0 text-warning" aria-hidden="true" />
           <p className="font-mono text-xs font-semibold uppercase tracking-[0.12em] sm:text-sm">
-            Demo only — ElyRush is not live yet.
+            Demo only.
           </p>
         </div>
       </section>
 
-      <section id="market" className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
+      <section id="market" className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
         {loop.isLoading ? (
           <div className="panel flex min-h-[360px] items-center justify-center p-8 text-center">
             <div>
