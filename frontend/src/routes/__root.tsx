@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { lightTheme, RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { WagmiProvider } from "wagmi";
 import {
@@ -22,54 +22,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { WalletProvider } from "@/providers";
 import { TransactionProvider } from "@/contexts/TransactionContext";
 import { TransactionFeed } from "@/components/transaction-feed";
-
-const elyRushWalletTheme = {
-  ...lightTheme({
-    accentColor: "#b7f34a",
-    accentColorForeground: "#15180f",
-    borderRadius: "medium",
-    fontStack: "system",
-    overlayBlur: "small",
-  }),
-  colors: {
-    ...lightTheme().colors,
-    accentColor: "#b7f34a",
-    accentColorForeground: "#15180f",
-    actionButtonBorder: "#171a14",
-    actionButtonBorderMobile: "#171a14",
-    actionButtonSecondaryBackground: "#e8e7dc",
-    closeButton: "#30362a",
-    closeButtonBackground: "#e8e7dc",
-    connectButtonBackground: "#b7f34a",
-    connectButtonText: "#15180f",
-    connectionIndicator: "#75b843",
-    downloadBottomCardBackground: "#e8e7dc",
-    downloadTopCardBackground: "#f5f3e9",
-    generalBorder: "#171a14",
-    generalBorderDim: "#c9c9b9",
-    menuItemBackground: "#e8e7dc",
-    modalBackdrop: "rgba(12, 15, 10, 0.72)",
-    modalBackground: "#f5f3e9",
-    modalBorder: "#171a14",
-    modalText: "#171a14",
-    modalTextDim: "#626657",
-    modalTextSecondary: "#454a3c",
-    profileAction: "#e8e7dc",
-    profileActionHover: "#dcdece",
-    profileForeground: "#171a14",
-    selectedOptionBorder: "#9bd632",
-  },
-  fonts: {
-    ...lightTheme().fonts,
-    body: '"Chakra Petch", ui-sans-serif, system-ui, sans-serif',
-  },
-  shadows: {
-    ...lightTheme().shadows,
-    dialog: "4px 4px 0 #171a14",
-    selectedOption: "3px 3px 0 #171a14",
-    selectedWallet: "3px 3px 0 #171a14",
-  },
-};
 
 function NotFoundComponent() {
   return (
@@ -190,7 +142,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <WagmiProvider config={wagmiConfig}>
-        <RainbowKitProvider theme={elyRushWalletTheme}>
+        <RainbowKitProvider>
           <WalletProvider>
             <TransactionProvider>
               <div className="flex min-h-screen flex-col pb-16 md:pb-0">
