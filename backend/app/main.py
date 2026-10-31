@@ -150,21 +150,27 @@ async def startup_event() -> None:
     if settings.ONCHAIN_INTERACTION_ENABLED:
         if not settings.ORACLE_PRIVATE_KEY:
             raise RuntimeError("ONCHAIN_INTERACTION_ENABLED is true but ORACLE_PRIVATE_KEY is not configured")
+        if not settings.ORACLE_RPC_URL:
+            raise RuntimeError("ONCHAIN_INTERACTION_ENABLED is true but ORACLE_RPC_URL is not configured")
+        if not settings.ORACLE_CONTRACT_ADDRESS:
+            raise RuntimeError("ONCHAIN_INTERACTION_ENABLED is true but ORACLE_CONTRACT_ADDRESS is not configured")
         oracle_client = OracleClient(
             settings.ORACLE_RPC_URL,
             settings.ORACLE_CONTRACT_ADDRESS,
             contract_json_path=settings.ORACLE_CONTRACT_JSON_PATH,
             private_key=settings.ORACLE_PRIVATE_KEY,
         )
-        available = {
-            item.get("name")
-            for item in oracle_client.abi
-            if item.get("type") == "function" and isinstance(item.get("name"), str)
-        }
-        if not {"createRound", "protocolFeeBps"}.issubset(available):
-            raise RuntimeError("Oracle ABI is missing required createRound/protocolFeeBps methods")
-        if not available.intersection({"oracle", "resultOracle"}):
-            raise RuntimeError("Oracle ABI is missing the oracle getter required for signer validation")
+        oracle_client.validate_required_functions(
+            {
+                "createRound",
+                "submitResult",
+                "currentRoundId",
+                "getRoundInfo",
+                "protocolFeeBps",
+                "resultOracle",
+                "owner",
+            }
+        )
         if not oracle_client.is_connected():
             raise RuntimeError("Oracle RPC is not connected")
         if settings.ORACLE_CHAIN_ID and oracle_client.get_chain_id() != settings.ORACLE_CHAIN_ID:
@@ -178,6 +184,13 @@ async def startup_event() -> None:
                 "ORACLE_PRIVATE_KEY does not match the deployed contract oracle address. "
                 f"Signer={signer_address}, contract oracle={contract_oracle_address}. "
                 "Use a private key for the current contract oracle or update the contract oracle role."
+            )
+        contract_owner = oracle_client.call_readonly("owner")
+        if signer_address.lower() != contract_owner.lower():
+            raise RuntimeError(
+                "ORACLE_PRIVATE_KEY must also belong to the ElyRushBetting owner because the backend "
+                "creates rounds through the owner-only createRound function. "
+                f"Signer={signer_address}, contract owner={contract_owner}."
             )
         app.state.oracle_client = oracle_client
 

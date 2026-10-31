@@ -86,6 +86,19 @@ ONCHAIN_INTERACTION_ENABLED=false
 
 `ONCHAIN_INTERACTION_ENABLED` controls backend round interaction with the ElyRush contract. Set it to `false` to create, open, lock, settle, and finish rounds using local backend state only; the backend will not initialize an RPC contract client. Set it to `true` to enable on-chain round creation and result submission (and transaction verification). When unset, it falls back to the legacy `ORACLE_ENABLED` value.
 
+For Kinetiq Elysium testnet, copy `.env.example` to `.env` and fill in the
+deployed contract address and oracle private key. The example uses chain ID
+`99801` and the current `ElyRushBetting` ABI at
+`app/oracle/artifacts/ElyRushBetting.json`. The backend signer must match both
+`resultOracle` and `owner()` on the deployed contract: it submits results as
+the oracle and creates rounds through the owner-only `createRound` function.
+Fund that account with testnet HYPE for gas, then set
+`ONCHAIN_INTERACTION_ENABLED=true`. Leave it false for local-only rounds.
+
+The betting contract pays winners their HYPE directly through
+`claimWinnings(roundId)`. Keep `BUYBACK_ENABLED=false`; the backend's legacy
+buyback/stock-vault settings are not part of this flow.
+
 ## File logging
 
 The backend now writes logs to a file by default at `./logs/rushhour.log`.

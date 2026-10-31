@@ -34,7 +34,7 @@ class Settings:
     ).lower() in ("1", "true", "yes")
     ORACLE_ENABLED: bool = os.getenv("ORACLE_ENABLED", "false").lower() in ("1", "true", "yes")
     ORACLE_RPC_URL: str = os.getenv("ORACLE_RPC_URL", "")
-    ORACLE_CHAIN_ID: int = int(os.getenv("ORACLE_CHAIN_ID", "0"))
+    ORACLE_CHAIN_ID: int = int(os.getenv("ORACLE_CHAIN_ID", "99801"))
     ORACLE_CONTRACT_ADDRESS: str = os.getenv("ORACLE_CONTRACT_ADDRESS", "")
     ORACLE_CONTRACT_JSON_PATH: str = os.getenv(
         "ORACLE_CONTRACT_JSON_PATH",
