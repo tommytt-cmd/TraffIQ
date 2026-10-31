@@ -159,12 +159,6 @@ function WalletActivity({ bets, isLoading, error }: { bets: Array<Record<string,
   const winners = bets.filter((bet) => bet.status === "WON" || bet.settlement?.is_winner === true);
   const claimed = winners.filter((bet) => bet.settlement?.has_claimed || bet.settlement?.claim_status === "CLAIMED");
   const awaiting = winners.filter((bet) => !bet.settlement?.has_claimed && (bet.settlement?.claim_status === "AVAILABLE" || Number(bet.settlement?.pending_eth ?? 0) > 0));
-  const sections = [
-    { title: "Bet history", items: bets, kind: "all" },
-    { title: "Winning rounds", items: winners, kind: "wins" },
-    { title: "Claimed rounds", items: claimed, kind: "claimed" },
-    { title: "Awaiting claim", items: awaiting, kind: "awaiting" },
-  ] as const;
 
   return (
     <div className="mt-10 space-y-6">
@@ -173,35 +167,67 @@ function WalletActivity({ bets, isLoading, error }: { bets: Array<Record<string,
         <h2 className="mt-2 text-3xl">Bets and winnings</h2>
       </div>
       {error ? <p className="rounded-2xl border border-rose-400/40 bg-rose-400/10 p-4 text-sm text-rose-200">{error.message}</p> : null}
-      <div className="grid gap-5 lg:grid-cols-2">
-        {sections.map((section) => (
-          <section key={section.kind} className="min-w-0 rounded-3xl border border-border bg-surface-2/70 p-5">
-            <div className="mb-4 flex items-center justify-between gap-3">
+      <section className="panel overflow-x-auto">
+        <table className="w-full min-w-[760px] border-collapse text-left">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="label-tech px-4 py-3">Won / Lost</th>
+              <th className="label-tech px-2 py-3">Stake</th>
+              <th className="label-tech px-2 py-3">Amount won / lost</th>
+              <th className="label-tech px-2 py-3">Prediction</th>
+              <th className="label-tech px-2 py-3">Outcome</th>
+              <th className="label-tech px-2 py-3 text-right">Round ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">Loading bet history…</td></tr>
+            ) : bets.length === 0 ? (
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">No bets yet.</td></tr>
+            ) : bets.map((bet) => {
+              const stake = Number(bet.stake ?? 0) / 1e18;
+              const won = bet.status === "WON" || bet.settlement?.is_winner === true;
+              const resultAmount = won ? stake : bet.status === "LOST" ? -stake : 0;
+              return (
+                <tr key={bet.bet_id} className="border-b border-border/60 last:border-0">
+                  <td className="px-4 py-3">
+                    <span className={won
+                      ? "clip-tag border border-emerald-500 bg-emerald-500/15 px-2 py-0.5 font-mono text-[0.625rem] uppercase text-emerald-700"
+                      : bet.status === "LOST"
+                        ? "clip-tag border border-rose-400 bg-rose-400/15 px-2 py-0.5 font-mono text-[0.625rem] uppercase text-rose-700"
+                        : "clip-tag border border-border bg-background px-2 py-0.5 font-mono text-[0.625rem] uppercase text-muted-foreground"}>
+                      {won ? "Won" : bet.status === "LOST" ? "Lost" : "Pending"}
+                    </span>
+                  </td>
+                  <td className="px-2 py-3 font-mono text-sm tabular-nums">{stake.toLocaleString(undefined, { maximumFractionDigits: 4 })} HYPE</td>
+                  <td className={`px-2 py-3 font-mono text-sm tabular-nums ${resultAmount > 0 ? "text-emerald-700" : resultAmount < 0 ? "text-rose-700" : "text-muted-foreground"}`}>
+                    {resultAmount > 0 ? "+" : ""}{resultAmount.toLocaleString(undefined, { maximumFractionDigits: 4 })} HYPE
+                  </td>
+                  <td className="px-2 py-3 font-mono text-sm tabular-nums">{bet.prediction ?? "—"}</td>
+                  <td className="px-2 py-3 font-mono text-sm tabular-nums">{bet.result ?? "—"}</td>
+                  <td className="px-4 py-3 text-right font-mono text-xs text-muted-foreground">{bet.round_number == null ? "—" : `#${bet.round_number}`}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </section>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        {[
+          { title: "Claimed rounds", items: claimed },
+          { title: "Awaiting claim", items: awaiting },
+        ].map((section) => (
+          <section key={section.title} className="rounded-3xl border border-border bg-surface-2/70 p-5">
+            <div className="mb-3 flex items-center justify-between gap-3">
               <h3 className="text-xl">{section.title}</h3>
               <span className="rounded-full border border-border px-3 py-1 font-mono text-xs text-muted-foreground">{section.items.length}</span>
             </div>
-            {isLoading ? <p className="py-4 text-sm text-muted-foreground">Loading activity…</p> : section.items.length === 0 ? (
-              <p className="py-4 text-sm text-muted-foreground">No {section.kind === "all" ? "bets" : "rounds"} to show yet.</p>
+            {isLoading ? <p className="py-2 text-sm text-muted-foreground">Loading…</p> : section.items.length === 0 ? (
+              <p className="py-2 text-sm text-muted-foreground">No rounds.</p>
             ) : (
-              <ul className="divide-y divide-border/70">
-                {section.items.map((bet) => {
-                  const round = bet.round_number == null ? "—" : `#${bet.round_number}`;
-                  const stake = (Number(bet.stake ?? 0) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 4 });
-                  const payout = Number(bet.settlement?.pending_eth ?? bet.settlement?.claimable_eth ?? 0) / 1e18;
-                  const outcome = bet.settlement?.has_claimed ? "Claimed" : bet.settlement?.claim_status === "AVAILABLE" ? "Awaiting claim" : bet.status;
-                  return (
-                    <li key={bet.bet_id} className="flex min-w-0 items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
-                      <div className="min-w-0">
-                        <p className="font-mono text-sm">Round {round}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">Prediction {bet.prediction} · {stake} HYPE staked</p>
-                      </div>
-                      <div className="shrink-0 text-right">
-                        <p className="text-xs text-muted-foreground">{outcome ?? "Pending"}</p>
-                        {payout > 0 ? <p className="mt-1 font-mono text-xs text-primary">{payout.toLocaleString(undefined, { maximumFractionDigits: 4 })} HYPE</p> : null}
-                      </div>
-                    </li>
-                  );
-                })}
+              <ul className="flex flex-wrap gap-2">
+                {section.items.map((bet) => <li key={bet.bet_id} className="rounded-full border border-border bg-background px-3 py-1 font-mono text-xs">Round #{bet.round_number ?? "—"}</li>)}
               </ul>
             )}
           </section>

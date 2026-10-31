@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { darkTheme, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { WagmiProvider } from "wagmi";
 import {
@@ -22,6 +22,14 @@ import { Toaster } from "@/components/ui/sonner";
 import { WalletProvider } from "@/providers";
 import { TransactionProvider } from "@/contexts/TransactionContext";
 import { TransactionFeed } from "@/components/transaction-feed";
+
+const elyRushRainbowTheme = darkTheme({
+  accentColor: "#b7f34a",
+  accentColorForeground: "#15180f",
+  borderRadius: "medium",
+  fontStack: "system",
+  overlayBlur: "small",
+});
 
 function NotFoundComponent() {
   return (
@@ -142,7 +150,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <WagmiProvider config={wagmiConfig}>
-        <RainbowKitProvider>
+        <RainbowKitProvider theme={elyRushRainbowTheme}>
           <WalletProvider>
             <TransactionProvider>
               <div className="flex min-h-screen flex-col pb-16 md:pb-0">
