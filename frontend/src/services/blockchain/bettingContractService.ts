@@ -9,6 +9,14 @@ import { formatTokenAmount } from "./utils";
 import RushBettingArtifact from "./RushBetting.json";
 import RushHolderVaultArtifact from "./RushHolderVault.json";
 
+const MIN_BET_ABI = [{
+  type: "function",
+  name: "getMinBet",
+  stateMutability: "view",
+  inputs: [],
+  outputs: [{ type: "uint256" }],
+}] as const satisfies Abi;
+
 function getBettingContractConfig() {
   const address = import.meta.env["VITE_BETTING_CONTRACT_ADDRESS"] as string | undefined;
   const artifact = RushBettingArtifact as Record<string, any>;
@@ -27,6 +35,16 @@ function getBettingContractConfig() {
 }
 
 export class BettingContractService {
+  static async getMinBet(provider: PublicClient): Promise<bigint> {
+    const { address } = getBettingContractConfig();
+    const minBet = await provider.readContract({
+      address: address as Address,
+      abi: MIN_BET_ABI,
+      functionName: "getMinBet",
+    });
+    return BigInt(minBet.toString());
+  }
+
   static async getRushRewardHistory(provider: PublicClient, player: Address, limit = 25) {
     const { address, abi } = getBettingContractConfig();
     const latest = BigInt(await provider.readContract({ address: address as Address, abi, functionName: "latestRound" }) as bigint);

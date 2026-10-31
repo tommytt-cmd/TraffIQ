@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { BrowserProvider, Contract, formatEther } from "ethers";
+import React from "react";
 import { ArrowDown, ArrowUp, CircleDollarSign, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +8,8 @@ interface BetSlipProps {
   walletBalance: number;
   potentialRush: string;
   protocolFee?: string;
+  minimumBet: string | null;
+  minimumBetLoading: boolean;
   onAmountChange: (amount: string) => void;
   onSubmit: () => Promise<void>;
   submitting?: boolean;
@@ -24,6 +25,8 @@ export function BetSlip({
   walletBalance,
   potentialRush,
   protocolFee,
+  minimumBet,
+  minimumBetLoading,
   onAmountChange,
   onSubmit,
   submitting,
@@ -32,27 +35,7 @@ export function BetSlip({
   statusMessage,
   errorMessage,
 }: BetSlipProps) {
-  const [minBetOnChain, setMinBetOnChain] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchMinBet = async () => {
-      try {
-        // require injected provider and env var for contract address
-        const anyWindow: any = window;
-        if (!anyWindow.ethereum) return;
-        const provider = new BrowserProvider(anyWindow.ethereum);
-        const address = import.meta.env["VITE_BETTING_CONTRACT_ADDRESS"];
-        if (!address) return;
-        const abi = ["function getMinBet() view returns (uint256)"];
-        const contract = new Contract(address, abi, provider);
-        const val = (await contract.getMinBet()) as bigint;
-        setMinBetOnChain(formatEther(val));
-      } catch (e) {
-        // ignore failures; keep local UX working
-      }
-    };
-    fetchMinBet();
-  }, []);
+  const belowMinimum = minimumBet !== null && Number(amount) < Number(minimumBet);
   return (
     <div className="mt-2 rounded-3xl">
       <div className="flex items-center justify-between gap-3">
@@ -72,12 +55,21 @@ export function BetSlip({
           <label className="label-tech">Amount (HYPE)</label>
           <input
             type="number"
-            min={minBetOnChain ?? 0}
-            step="0.001"
+            min={minimumBet ?? undefined}
+            step="any"
             value={amount}
             onChange={(event) => onAmountChange(event.target.value)}
             className="clip-tag w-full border border-input bg-background px-4 py-3 font-mono text-sm outline-none focus:border-primary"
           />
+          {minimumBetLoading ? (
+            <p className="text-xs text-muted-foreground">Fetching minimum bet from the contract…</p>
+          ) : minimumBet === null ? (
+            <p className="text-xs text-destructive">Could not read the on-chain minimum bet. Betting is disabled until it loads.</p>
+          ) : (
+            <p className={cn("text-xs", belowMinimum ? "text-destructive" : "text-muted-foreground")}>
+              Minimum bet: {minimumBet} HYPE{belowMinimum ? " — enter at least this amount." : ""}
+            </p>
+          )}
         </div>
 
         {/*<div className="grid gap-2 rounded-3xl border border-border bg-background p-4">

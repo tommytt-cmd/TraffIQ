@@ -9,6 +9,8 @@ import type { ClaimStatus } from "@/services/blockchain/types";
 export type BetSide = "OVER" | "UNDER";
 
 interface UserBetState {
+  minBetWei: bigint | null;
+  minBetLoading: boolean;
   pool: { under: number; over: number } | null;
   poolLoading: boolean;
   hasBet: boolean;
@@ -24,6 +26,8 @@ interface UserBetState {
 }
 
 const initialState: UserBetState = {
+  minBetWei: null,
+  minBetLoading: true,
   pool: null,
   poolLoading: true,
   hasBet: false,
@@ -50,8 +54,32 @@ export function useBettingContract(roundNumberOverride?: number) {
 
   useEffect(() => {
     // A new round must not inherit the previous round's locked position.
-    setState({ ...initialState });
+    setState((current) => ({
+      ...initialState,
+      minBetWei: current.minBetWei,
+      minBetLoading: current.minBetLoading,
+    }));
   }, [contractRoundNumber]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!provider) {
+      setState((current) => ({ ...current, minBetWei: null, minBetLoading: false }));
+      return;
+    }
+
+    setState((current) => ({ ...current, minBetLoading: true }));
+    void BettingContractService.getMinBet(provider)
+      .then((minBetWei) => {
+        if (!cancelled) setState((current) => ({ ...current, minBetWei, minBetLoading: false }));
+      })
+      .catch((error) => {
+        console.error("[useBettingContract] getMinBet failure", error);
+        if (!cancelled) setState((current) => ({ ...current, minBetWei: null, minBetLoading: false }));
+      });
+
+    return () => { cancelled = true; };
+  }, [provider]);
 
   const readPool = useCallback(async () => {
     if (!provider) return;
@@ -142,14 +170,19 @@ export function useBettingContract(roundNumberOverride?: number) {
 
   const placeBet = useCallback(
     async (side: BetSide, amountEth: string) => {
+      if (state.minBetWei === null) {
+        throw new Error("Unable to read the on-chain minimum bet. Please try again shortly.");
+      }
+      const amountWei = parseTokenAmount(amountEth);
+      if (amountWei < state.minBetWei) {
+        throw new Error(`Bet amount must be at least ${formatTokenAmount(state.minBetWei)} HYPE.`);
+      }
       if (!wallet.signer) {
         throw new Error("No wallet signer available");
       }
       if (!provider || !wallet.address) {
         throw new Error("Wallet provider is not ready for gas estimation.");
       }
-
-      const amountWei = parseTokenAmount(amountEth);
 
       const estimatedGas = await BettingContractService.estimatePlaceBet(
         provider,
@@ -174,7 +207,7 @@ export function useBettingContract(roundNumberOverride?: number) {
 
       return BettingContractService.placeBet(wallet.signer, contractRoundNumber, side, amountWei);
     },
-    [provider, wallet.address, wallet.signer, contractRoundNumber],
+    [provider, wallet.address, wallet.signer, contractRoundNumber, state.minBetWei],
   );
 
   const claimEth = useCallback(async (roundNumber: number) => {

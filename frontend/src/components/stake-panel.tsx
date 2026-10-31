@@ -8,6 +8,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { BetSyncService } from "@/services/blockchain/betSyncService";
 import { TransactionService } from "@/services/blockchain/transactionService";
 import { BettingContractService } from "@/services/blockchain/bettingContractService";
+import { formatTokenAmount, parseTokenAmount } from "@/services/blockchain/utils";
 import { BetSlip } from "@/components/bet-slip";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,15 @@ export function StakePanel({ roundId, phase, roundNumber, threshold, pool }: Sta
   const walletConnected = Boolean(wallet.address && wallet.connected);
   const wrongNetwork = walletConnected && !wallet.isCorrectNetwork;
   const insufficientEth = Number(amount) > wallet.balance;
+  const minimumBet = betting.minBetWei === null ? null : formatTokenAmount(betting.minBetWei);
+  const belowMinimumBet = useMemo(() => {
+    if (betting.minBetWei === null) return true;
+    try {
+      return parseTokenAmount(amount) < betting.minBetWei;
+    } catch {
+      return true;
+    }
+  }, [amount, betting.minBetWei]);
   const alreadyBet = betting.hasBet;
   const loadingBetState = betting.loading;
 
@@ -59,9 +69,12 @@ export function StakePanel({ roundId, phase, roundNumber, threshold, pool }: Sta
     if (wrongNetwork) return "Switch to the Elysium network to continue.";
     if (!open) return "Betting is closed for this round.";
     if (alreadyBet) return "You already placed a bet for this round.";
+    if (betting.minBetLoading) return "Loading the on-chain minimum bet.";
+    if (betting.minBetWei === null) return "Unable to load the on-chain minimum bet.";
+    if (belowMinimumBet) return `Enter at least ${minimumBet} HYPE to place a bet.`;
     if (insufficientEth) return "Insufficient HYPE balance.";
     return null;
-  }, [walletConnected, wrongNetwork, open, alreadyBet, insufficientEth]);
+  }, [walletConnected, wrongNetwork, open, alreadyBet, betting.minBetLoading, betting.minBetWei, belowMinimumBet, minimumBet, insufficientEth]);
 
   async function submit() {
     setSubmissionError(null);
@@ -81,6 +94,14 @@ export function StakePanel({ roundId, phase, roundNumber, threshold, pool }: Sta
     }
     if (alreadyBet) {
       setSubmissionError("Your active bet is already recorded on-chain.");
+      return;
+    }
+    if (betting.minBetLoading || betting.minBetWei === null) {
+      setSubmissionError("The on-chain minimum bet is not available yet. Please try again shortly.");
+      return;
+    }
+    if (belowMinimumBet) {
+      setSubmissionError(`The minimum bet is ${minimumBet} HYPE.`);
       return;
     }
     if (Number(amount) <= 0) {
@@ -287,9 +308,11 @@ export function StakePanel({ roundId, phase, roundNumber, threshold, pool }: Sta
             walletBalance={wallet.balance}
             potentialRush={betting.claimableRush}
             protocolFee={betting.protocolFee}
+            minimumBet={minimumBet}
+            minimumBetLoading={betting.minBetLoading}
             onSubmit={submit}
             submitting={submitting}
-            disabled={!open || submitting || loadingBetState || betting.poolLoading || wrongNetwork || alreadyBet || insufficientEth || !displayedPool}
+            disabled={!open || submitting || loadingBetState || betting.poolLoading || betting.minBetLoading || betting.minBetWei === null || belowMinimumBet || wrongNetwork || alreadyBet || insufficientEth || !displayedPool}
             closed={!open}
             statusMessage={statusMessage}
             errorMessage={submissionError || backendSyncError || betting.error}
