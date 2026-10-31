@@ -231,11 +231,11 @@ function Index() {
             data are public and reproducible.
           </SectionHeading>
           <div className="panel mt-6 overflow-x-auto">
-            <table className="w-full min-w-[420px] border-collapse text-left">
+            <table className="w-full min-w-[320px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-border">
                   <th className="label-tech px-4 py-3">Round</th>
-                  {/*<th className="label-tech px-2 py-3">Threshold</th>*/}
+                  <th className="label-tech px-2 py-3">Threshold</th>
                   <th className="label-tech px-2 py-3">Final</th>
                   <th className="label-tech px-2 py-3 text-right">Result</th>
                 </tr>
@@ -252,7 +252,7 @@ function Index() {
                     <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                       #{r.round_number.toString().slice(-6)}
                     </td>
-                    {/*<td className="px-4 py-3 font-mono text-sm">{r.threshold ?? "—"}</td>*/}
+                    <td className="px-4 py-3 font-mono text-sm">{r.threshold ?? "—"}</td>
                     <td className="px-4 py-3 font-mono text-sm tabular-nums">{r.final}</td>
                     <td className="px-4 py-3 text-right">
                       <span
