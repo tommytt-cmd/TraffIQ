@@ -150,8 +150,8 @@ function Index() {
     <div>
       <section className="relative border-b border-border">
         <div className="relative mx-auto max-w-7xl px-4 pt-8 pb-12 sm:px-6">
-          <h1 className="mt-3 max-w-3xl text-4xl leading-[0.95] sm:text-6xl">
-            <span className="text-primary">Ely</span>Rush — Live vehicle-count prediction markets
+          <h1 className="mt-3 max-w-3xl text-2xl leading-[0.95] sm:text-6xl">
+           {/* <span className="text-primary">Ely</span>Rush — */}Live vehicle-count prediction markets
           </h1>
           <p className="mt-4 max-w-md text-sm text-muted-foreground">
             Place under/over stakes on verified junction vehicle counts. Rounds are settled
@@ -172,6 +172,15 @@ function Index() {
               How it works
             </Link>
           </div>
+        </div>
+      </section>
+
+      <section aria-label="Demo notice" className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
+        <div className="flex items-center gap-3 border border-warning/60 bg-warning/15 px-4 py-3 text-warning-foreground">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-warning" aria-hidden="true" />
+          <p className="font-mono text-xs font-semibold uppercase tracking-[0.12em] sm:text-sm">
+            Demo only — ElyRush is not live yet.
+          </p>
         </div>
       </section>
 
@@ -352,11 +361,11 @@ function Index() {
         </div>
         */}
 
-        <div className="mt-14">
+        {/*<div className="mt-14">
           <SectionHeading eyebrow="How it works" title="The market flow">
             Rounds open to participants, settle against the verified count, and resolve based on the final on-chain result.
           </SectionHeading>
-        </div>
+        </div>*/}
       </section>
     </div>
   );

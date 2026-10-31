@@ -19,15 +19,14 @@ export const CHAIN_KEYS = {
   ROBINHOOD: "ROBINHOOD",
 } as const;
 
-// Keep this fallback aligned with the deployed Elysium chain configuration.
-// Production deployments must still provide VITE_ROBINHOOD_CHAIN_ID explicitly.
+// Elysium mainnet. Override the RPC with VITE_ELYSIUM_RPC_URL when needed.
 export const DEFAULT_CHAIN_ID = Number(
-  import.meta.env.VITE_ROBINHOOD_CHAIN_ID ?? 46630,
+  import.meta.env.VITE_ELYSIUM_CHAIN_ID ?? 99901,
 );
 export const DEFAULT_RPC_URL =
-  import.meta.env.VITE_ROBINHOOD_RPC_URL ?? "https://rpc-live.elysp.com";
+  import.meta.env.VITE_ELYSIUM_RPC_URL ?? "https://rpc-live.elysp.com";
 export const DEFAULT_EXPLORER_URL =
-  import.meta.env.VITE_BLOCK_EXPLORER ?? "https://rpc-live.elysp.com";
+  import.meta.env.VITE_BLOCK_EXPLORER ?? "https://scan.elysp.com";
 
 export const ROBINHOOD_CHAIN_INFO = {
   chainId: DEFAULT_CHAIN_ID,
@@ -35,8 +34,8 @@ export const ROBINHOOD_CHAIN_INFO = {
   rpcUrl: DEFAULT_RPC_URL,
   explorerUrl: DEFAULT_EXPLORER_URL,
   nativeCurrency: {
-    name: "Ether",
-    symbol: "ETH",
+    name: "HYPE",
+    symbol: "HYPE",
     decimals: 18,
   },
 };

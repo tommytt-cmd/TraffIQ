@@ -11,7 +11,7 @@ import { BettingContractService } from "@/services/blockchain/bettingContractSer
 import { BetSlip } from "@/components/bet-slip";
 import { cn } from "@/lib/utils";
 
-const ticker = import.meta.env["TICKER"] ?? "ETH";
+const ticker = "HYPE";
 
 interface StakeProps {
   roundId: string;
@@ -56,10 +56,10 @@ export function StakePanel({ roundId, phase, roundNumber, threshold, pool }: Sta
 
   const statusMessage = useMemo(() => {
     if (!walletConnected) return "Connect your wallet to place a bet.";
-    if (wrongNetwork) return "Switch to the Robinhood network to continue.";
+    if (wrongNetwork) return "Switch to the Elysium network to continue.";
     if (!open) return "Betting is closed for this round.";
     if (alreadyBet) return "You already placed a bet for this round.";
-    if (insufficientEth) return "Insufficient ETH balance.";
+    if (insufficientEth) return "Insufficient HYPE balance.";
     return null;
   }, [walletConnected, wrongNetwork, open, alreadyBet, insufficientEth]);
 
@@ -72,7 +72,7 @@ export function StakePanel({ roundId, phase, roundNumber, threshold, pool }: Sta
       return;
     }
     if (wrongNetwork) {
-      setSubmissionError("Please switch to the Robinhood network.");
+      setSubmissionError("Please switch to the Elysium network.");
       return;
     }
     if (!open) {
@@ -88,7 +88,7 @@ export function StakePanel({ roundId, phase, roundNumber, threshold, pool }: Sta
       return;
     }
     if (insufficientEth) {
-      setSubmissionError("Your wallet does not have enough ETH for this bet.");
+      setSubmissionError("Your wallet does not have enough HYPE for this bet.");
       return;
     }
     if (!wallet.signer) {
@@ -252,7 +252,7 @@ export function StakePanel({ roundId, phase, roundNumber, threshold, pool }: Sta
           ) : (
             <p className="mt-2 text-xs text-muted-foreground">Payout estimate will appear once the round pool is available.</p>
           )*/}
-          <p className="mt-1 text-xs text-muted-foreground">This ETH pool share is used to purchase stock rewards, not paid as a direct ETH withdrawal. It uses current pools after the {protocolFeeBps / 100}% protocol fee; final pools can change until betting closes.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Winners can claim their share of the HYPE pool after the {protocolFeeBps / 100}% protocol fee. Final pool amounts can change until betting closes.</p>
           <p className="mt-1 text-xs text-muted-foreground">Your bet is stored on the on-chain and will settle when the round closes.</p>
         </div>
       ) : (

@@ -63,7 +63,7 @@ function WalletPage() {
               </div>
               <div className="rounded-2xl border border-border bg-background p-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Balance</p>
-                <p className="mt-2 text-sm text-foreground">{wallet.balance.toFixed(4)} ETH</p>
+                <p className="mt-2 text-sm text-foreground">{wallet.balance.toFixed(4)} HYPE</p>
               </div>
               <div className="rounded-2xl border border-border bg-background p-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Network</p>

@@ -8,19 +8,19 @@ import {
 import { defineChain } from "viem";
 
 const elysiumRpcUrl =
-  import.meta.env["VITE_ROBINHOOD_RPC_URL"] ?? "https://rpc-live.elysp.com";
+  import.meta.env["VITE_ELYSIUM_RPC_URL"] ?? "https://rpc-live.elysp.com";
 const elysiumExplorerUrl =
-  import.meta.env["VITE_BLOCK_EXPLORER"] ?? "https://rpc-live.elysp.com";
+  import.meta.env["VITE_BLOCK_EXPLORER"] ?? "https://scan.elysp.com";
 const elysiumChainId = Number(
-  import.meta.env["VITE_ROBINHOOD_CHAIN_ID"] ?? 46630,
+  import.meta.env["VITE_ELYSIUM_CHAIN_ID"] ?? 99901,
 );
 
 export const robinhoodChain = defineChain({
   id: elysiumChainId,
   name: "Elysium Chain",
   nativeCurrency: {
-    name: "Ether",
-    symbol: "ETH",
+    name: "HYPE",
+    symbol: "HYPE",
     decimals: 18,
   },
   rpcUrls: {

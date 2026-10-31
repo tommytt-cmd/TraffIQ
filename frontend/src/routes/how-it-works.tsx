@@ -10,12 +10,12 @@ export const Route = createFileRoute("/how-it-works")({
       {
         name: "description",
         content:
-          "How a ElyRush vehicle-count round accepts ETH stakes, resolves through its oracle, and allocates purchased stock tokens to winning users.",
+          "How an ElyRush vehicle-count round accepts HYPE bets, resolves through its oracle, and lets winning users claim HYPE.",
       },
       { property: "og:title", content: "How ElyRush Works — Phases, Thresholds, Settlement" },
       {
         property: "og:description",
-        content: "The betting deadline, oracle settlement, stock purchase and claim flow for a ElyRush round.",
+        content: "The betting deadline, oracle settlement, and HYPE claim flow for an ElyRush round.",
       },
     ],
   }),
@@ -29,15 +29,15 @@ const STEPS = [
   },
   {
     title: "You pick a side",
-    body: "You stake ETH on either UNDER or OVER before the on-chain deadline. A configured minimum stake may apply.",
+    body: "You stake HYPE on either UNDER or OVER before the on-chain deadline. A configured minimum stake may apply.",
   },
   {
     title: "The market settles",
     body: "After betting closes, only the designated result publisher can submit the final count. OVER wins when the count is greater than the threshold; an equal count resolves as UNDER.",
   },
   {
-    title: "Winners claim stock tokens",
-    body: "The post-fee winner reward pool is used to buy the enabled stock-token portfolio. Once the reward vault is finalized, each winning user can claim a pro-rata allocation for each purchased token.",
+    title: "Winners claim HYPE",
+    body: "After the protocol fee is paid, each winning user can claim HYPE in proportion to their stake on the winning side.",
   },
 ];
 
@@ -81,17 +81,14 @@ function HowItWorks() {
       </div>
 
       <div className="mt-16">
-        <SectionHeading eyebrow="Rewards" title="How winning allocations are calculated" />
+        <SectionHeading eyebrow="Rewards" title="How HYPE winnings are calculated" />
         <Panel className="mt-6">
           <p className="font-mono text-sm text-primary">
-            token allocation = round token balance × your winning stake ÷ total winning-user stake
+            your HYPE payout = post-fee winning pool × your winning stake ÷ total winning stake
           </p>
           <p className="mt-4 text-sm text-muted-foreground">
-            The protocol records eligible winners and their winning stakes in the reward vault. The
-            protocol treasury divides the market's available ETH equally across every enabled stock,
-            swaps into those tokens, and transfers them to the vault. Each winner's claim is
-            calculated separately for each acquired token. If a stock purchase fails, the protocol
-            operator can retry it before the reward vault is finalized.
+            The contract records each user's stake on the winning side. After settlement, winners
+            claim their share of the post-fee HYPE pool directly from the betting contract.
           </p>
         </Panel>
       </div>

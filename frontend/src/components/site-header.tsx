@@ -13,7 +13,7 @@ const NAV = [
   { to: "/about", label: "About" },
 ] as const;
 
-const ticker = import.meta.env["TICKER"] ?? 'ETH';
+const ticker = import.meta.env["TICKER"] ?? 'HYPE';
 
 export function SiteHeader() {
   const wallet = useWallet();

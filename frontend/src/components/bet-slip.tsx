@@ -69,7 +69,7 @@ export function BetSlip({
 
       <div className="mt-2 space-y-4">
         <div className="grid gap-2">
-          <label className="label-tech">Amount (ETH)</label>
+          <label className="label-tech">Amount (HYPE)</label>
           <input
             type="number"
             min={minBetOnChain ?? 0}
@@ -83,7 +83,7 @@ export function BetSlip({
         {/*<div className="grid gap-2 rounded-3xl border border-border bg-background p-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Wallet balance</span>
-            <span>{walletBalance.toFixed(4)} ETH</span>
+            <span>{walletBalance.toFixed(4)} HYPE</span>
           </div>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Potential RUSH reward</span>
@@ -92,7 +92,7 @@ export function BetSlip({
           {protocolFee ? (
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>Protocol fee</span>
-              <span>{protocolFee} ETH</span>
+              <span>{protocolFee} HYPE</span>
             </div>
           ) : null}
         </div>*/}
