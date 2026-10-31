@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertTriangle } from "lucide-react";
 
@@ -49,21 +49,22 @@ function Index() {
   const loop = useGameLoop();
   const queryClient = useQueryClient();
   const PAGE_SIZE = 10;
-  const historyQuery = useInfiniteQuery({
-    queryKey: ["round-history"],
-    queryFn: async ({ pageParam = 0 }) => {
+  const [historyOffset, setHistoryOffset] = useState(0);
+  const historyQuery = useQuery({
+    queryKey: ["round-history", historyOffset],
+    queryFn: async () => {
       const apiBase = import.meta.env["VITE_GAME_API_URL"] ?? "http://localhost:8000";
-      const response = await fetch(`${apiBase}/api/game/history?limit=${PAGE_SIZE}&offset=${pageParam}`, { cache: "no-store" });
+      const response = await fetch(`${apiBase}/api/game/history?limit=${PAGE_SIZE}&offset=${historyOffset}`, { cache: "no-store" });
       if (!response.ok) throw new Error("Unable to load round history");
       return (await response.json()) as { items: Array<{ id: string; round_number: number; threshold: number | null; final: number; result: "over" | "under" | null }>; total: number; limit: number; offset: number };
-    },
-    getNextPageParam: (lastPage) => {
-      const next = lastPage.offset + lastPage.limit;
-      return next < lastPage.total ? next : undefined;
     },
     staleTime: 30_000,
     refetchInterval: 30_000,
   });
+  const history = historyQuery.data?.items ?? [];
+  const historyTotal = historyQuery.data?.total ?? 0;
+  const historyPage = Math.floor(historyOffset / PAGE_SIZE) + 1;
+  const historyPageCount = Math.max(1, Math.ceil(historyTotal / PAGE_SIZE));
 
   /*
   const supportedStocksQuery = useQuery({
@@ -139,11 +140,6 @@ function Index() {
     }
   }, [loop.phase, loop.roundNumber, loop.lastWinner, queryClient]);
 
-  const history = (historyQuery.data?.pages ?? []).flatMap((p) => {
-    if (Array.isArray(p)) return p as Array<any>;
-    if (p && Array.isArray((p as any).items)) return (p as any).items as Array<any>;
-    return [] as Array<any>;
-  }) ?? [];
   const settleData = loop.phase === "settle" && loop.lastWinner ? loop.lastWinner : null;
 
   return (
@@ -247,6 +243,10 @@ function Index() {
               <tbody>
                 {historyQuery.isLoading ? (
                   <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-muted-foreground">Loading history…</td></tr>
+                ) : historyQuery.isError ? (
+                  <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-destructive">Unable to load round history.</td></tr>
+                ) : history.length === 0 ? (
+                  <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-muted-foreground">No settled rounds yet.</td></tr>
                 ) : history.map((r) => (
                   <tr key={r.round_number} className="border-b border-border/60 last:border-0">
                     <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
@@ -269,12 +269,24 @@ function Index() {
                 ))}
               </tbody>
             </table>
-            <div className="mt-3 flex justify-center">
-              {historyQuery.hasNextPage ? (
-                <button onClick={() => void historyQuery.fetchNextPage()} className="clip-tag border border-primary px-4 py-2 text-sm text-primary">Load more</button>
-              ) : (
-                <span className="text-sm text-muted-foreground">End of history</span>
-              )}
+            <div className="mt-4 flex items-center justify-between gap-3 px-2">
+              <button
+                onClick={() => setHistoryOffset((offset) => Math.max(0, offset - PAGE_SIZE))}
+                disabled={historyOffset === 0 || historyQuery.isFetching}
+                className="clip-tag border border-primary px-4 py-2 text-sm text-primary disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Previous
+              </button>
+              <span className="font-mono text-xs text-muted-foreground">
+                Page {historyPage} of {historyPageCount}
+              </span>
+              <button
+                onClick={() => setHistoryOffset((offset) => offset + PAGE_SIZE)}
+                disabled={historyOffset + PAGE_SIZE >= historyTotal || historyQuery.isFetching}
+                className="clip-tag border border-primary px-4 py-2 text-sm text-primary disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>
