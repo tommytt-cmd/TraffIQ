@@ -1,10 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Wallet } from "lucide-react";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
-import { useWallet } from "@/hooks/useWallet";
-import { WalletStatus } from "@/components/wallet-status";
 import { shortAddress } from "@/lib/round";
-import { useWalletModal } from "@/components/wallet-connect-modal";
 
 const NAV = [
   { to: "/", label: "Live" },
@@ -13,12 +11,7 @@ const NAV = [
   { to: "/about", label: "About" },
 ] as const;
 
-const ticker = import.meta.env["TICKER"] ?? 'HYPE';
-
 export function SiteHeader() {
-  const wallet = useWallet();
-  const { setOpen } = useWalletModal();
-
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 sm:px-6">
@@ -49,40 +42,56 @@ export function SiteHeader() {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          {wallet.address ? (
-            <div className="sm:block">
-              <Link
-                to="/wallet"
-                className="clip-tag border border-primary/60 bg-primary/10 px-3 py-2 font-mono text-xs text-primary"
-              >
-                {shortAddress(wallet.address)} · {/*wallet.balance.toFixed(3)} {ticker*/}
-              </Link>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="clip-tag flex items-center gap-2 bg-primary px-3 py-2 font-display text-xs font-bold uppercase tracking-[0.14em] text-primary-foreground transition-opacity hover:opacity-85"
-            >
-              <Wallet className="h-4 w-4" />
-              <span className="hidden sm:inline">Connect wallet</span>
-              <span className="sm:hidden">Connect</span>
-            </button>
-          )}
+          <ConnectButton.Custom>
+            {({
+              account,
+              chain,
+              openAccountModal,
+              openChainModal,
+              openConnectModal,
+              mounted,
+            }) => {
+              const ready = mounted;
+              const connected = ready && account && chain;
 
-          {/*wallet.address ? (
-            <WalletStatus />
-          ) : (
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="clip-tag flex items-center gap-2 bg-primary px-3 py-2 font-display text-xs font-bold uppercase tracking-[0.14em] text-primary-foreground transition-opacity hover:opacity-85"
-            >
-              <Wallet className="h-4 w-4" />
-              <span className="hidden sm:inline">Connect wallet</span>
-              <span className="sm:hidden">Connect</span>
-            </button>
-          )*/}
+              return (
+                <div
+                  aria-hidden={!ready}
+                  className={!ready ? "opacity-0" : undefined}
+                  style={!ready ? { pointerEvents: "none", userSelect: "none" } : undefined}
+                >
+                  {!connected ? (
+                    <button
+                      type="button"
+                      onClick={openConnectModal}
+                      className="clip-tag flex items-center gap-2 bg-primary px-3 py-2 font-display text-xs font-bold uppercase tracking-[0.14em] text-primary-foreground transition-opacity hover:opacity-85"
+                    >
+                      <Wallet className="h-4 w-4" />
+                      <span className="hidden sm:inline">Connect wallet</span>
+                      <span className="sm:hidden">Connect</span>
+                    </button>
+                  ) : chain.unsupported ? (
+                    <button
+                      type="button"
+                      onClick={openChainModal}
+                      className="clip-tag border border-rose-500/60 bg-rose-500/10 px-3 py-2 font-mono text-xs text-rose-300"
+                    >
+                      Wrong network
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={openAccountModal}
+                      className="clip-tag border border-primary/60 bg-primary/10 px-3 py-2 font-mono text-xs text-primary"
+                    >
+                      {shortAddress(account.address)}
+                    </button>
+                  )}
+                </div>
+              );
+            }}
+          </ConnectButton.Custom>
+
         </div>
       </div>
     </header>

@@ -1,5 +1,4 @@
 import { useEffect, useMemo } from "react";
-import type { Connector } from "wagmi";
 import {
   useAccount,
   useBalance,
@@ -15,8 +14,7 @@ import type {
   WalletContextValue,
   WalletState,
 } from "@/services/blockchain/types";
-import { ROBINHOOD_CHAIN_INFO } from "@/services/blockchain/constants";
-import { robinhoodChain, wagmiConnectors } from "@/services/blockchain/wagmi";
+import { elysiumTestnetChain } from "@/services/blockchain/wagmi";
 
 function normalizeChainId(value: number | string | bigint | null | undefined): number | null {
   if (value === null || value === undefined || value === "") return null;
@@ -51,16 +49,10 @@ const initialState: WalletState = {
   error: null,
 };
 
-const connectorMap: Record<WalletConnectorName, Connector> = {
-  MetaMask: wagmiConnectors.MetaMask,
-  "Coinbase Wallet": wagmiConnectors.Coinbase,
-  Rainbow: wagmiConnectors.Rainbow,
-  WalletConnect: wagmiConnectors.WalletConnect,
-};
-
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const {
     connectAsync,
+    connectors,
     status: connectStatus,
     error: connectError,
   } = useConnect();
@@ -72,14 +64,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     isConnected,
     chainId: accountChainId,
   } = useAccount();
-  const publicClient = usePublicClient({ chainId: robinhoodChain.id });
+  const publicClient = usePublicClient({ chainId: elysiumTestnetChain.id });
   const { data: walletClient } = useWalletClient({
-    chainId: robinhoodChain.id,
+    chainId: elysiumTestnetChain.id,
   });
   // disable continuous balance polling to avoid excessive RPC calls; refetch on demand
   const { data: balanceData, refetch: refetchBalance } = useBalance({
     address,
-    chainId: robinhoodChain.id,
+    chainId: elysiumTestnetChain.id,
     watch: false,
     enabled: Boolean(address),
     // periodic background refresh kept low to reduce RPC usage
@@ -90,7 +82,20 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const signer = walletClient ?? null;
 
   const connect = async (connectorName: WalletConnectorName) => {
-    const selectedConnector = connectorMap[connectorName];
+    const selectedConnector = connectors.find((candidate) => {
+      const name = candidate.name.toLowerCase();
+      const id = candidate.id.toLowerCase();
+      switch (connectorName) {
+        case "MetaMask":
+          return name.includes("metamask") || id.includes("metamask");
+        case "Coinbase Wallet":
+          return name.includes("coinbase") || id.includes("coinbase");
+        case "Rainbow":
+          return name.includes("rainbow") || id.includes("rainbow");
+        case "WalletConnect":
+          return name.includes("walletconnect") || id.includes("walletconnect");
+      }
+    });
     if (!selectedConnector) {
       throw new Error(`Unsupported wallet connector: ${connectorName}`);
     }
@@ -115,8 +120,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   const switchNetwork = async () => {
     const normalizedAccountChainId = normalizeChainId(accountChainId);
-    if (normalizedAccountChainId === robinhoodChain.id) return;
-    await switchChainAsync({ chainId: robinhoodChain.id });
+    if (normalizedAccountChainId === elysiumTestnetChain.id) return;
+    await switchChainAsync({ chainId: elysiumTestnetChain.id });
   };
 
   const refreshBalances = async () => {
@@ -142,7 +147,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       address: address ?? null,
       providerName: normalizedProviderName,
       chainId,
-      chainName: robinhoodChain.name,
+      chainName: elysiumTestnetChain.name,
       status: isConnected
         ? "connected"
         : connectStatus === "connecting"
@@ -151,7 +156,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       balance: Number(balanceData?.formatted ?? "0"),
       nativeBalance: balanceData?.formatted ?? "0",
       tokenBalances: {},
-      isCorrectNetwork: chainId === ROBINHOOD_CHAIN_INFO.chainId,
+      isCorrectNetwork: chainId === elysiumTestnetChain.id,
       lastConnectedWallet: normalizedProviderName,
       error: connectError?.message ?? null,
       provider,
@@ -167,6 +172,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     connector,
     accountChainId,
     connectStatus,
+    connectors,
     connectError,
     balanceData,
     provider,

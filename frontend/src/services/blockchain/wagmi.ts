@@ -1,23 +1,16 @@
-import { createConfig, http } from "wagmi";
-import {
-  coinbaseWallet,
-  injected,
-  metaMask,
-  walletConnect,
-} from "@wagmi/connectors";
-import { defineChain } from "viem";
+import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { http, defineChain } from "viem";
 
 const elysiumRpcUrl =
-  import.meta.env["VITE_ELYSIUM_RPC_URL"] ?? "https://rpc-live.elysp.com";
+  import.meta.env["VITE_ELYSIUM_RPC_URL"] ??
+  "https://testnet-rpc.elysium.kinetiq.xyz";
 const elysiumExplorerUrl =
-  import.meta.env["VITE_BLOCK_EXPLORER"] ?? "https://scan.elysp.com";
-const elysiumChainId = Number(
-  import.meta.env["VITE_ELYSIUM_CHAIN_ID"] ?? 99901,
-);
+  import.meta.env["VITE_BLOCK_EXPLORER"] ??
+  "https://elysium.kinetiq.xyz/testnet-explorer";
 
-export const robinhoodChain = defineChain({
-  id: elysiumChainId,
-  name: "Elysium Chain",
+export const elysiumTestnetChain = defineChain({
+  id: Number(import.meta.env["VITE_ELYSIUM_CHAIN_ID"] ?? 99801),
+  name: "Kinetiq Elysium Testnet",
   nativeCurrency: {
     name: "HYPE",
     symbol: "HYPE",
@@ -30,79 +23,22 @@ export const robinhoodChain = defineChain({
   },
   blockExplorers: {
     default: {
-      name: "Elysium Explorer",
+      name: "Elysium Testnet Explorer",
       url: elysiumExplorerUrl,
     },
   },
-  testnet: false,
+  testnet: true,
 });
 
 const walletConnectProjectId =
   import.meta.env["VITE_WALLETCONNECT_PROJECT_ID"] ?? "";
 
-type WagmiRuntime = {
-  connectors: {
-    MetaMask: ReturnType<typeof metaMask>;
-    Coinbase: ReturnType<typeof coinbaseWallet>;
-    Rainbow: ReturnType<typeof injected>;
-    WalletConnect: ReturnType<typeof walletConnect>;
-  };
-  config: ReturnType<typeof createConfig>;
-};
-
-const runtimeKey = "__traffic_wagmi_runtime__";
-const globalRuntime = globalThis as typeof globalThis & {
-  [runtimeKey]?: WagmiRuntime;
-};
-
-// Vite HMR re-evaluates this module during development. Reusing the runtime
-// prevents WalletConnect Core from being initialized once per hot reload.
-const runtime =
-globalRuntime[runtimeKey] ??
-  (() => {
-    const connectors = {
-      MetaMask: metaMask(),
-      Coinbase: coinbaseWallet({ appName: "ElyRush" }),
-      Rainbow: injected({
-        shimDisconnect: true,
-        target: {
-          id: "rainbow",
-          name: "Rainbow",
-          provider: (window) => {
-            const providers = window?.ethereum?.providers;
-            return (
-              providers?.find((provider) => provider.isRainbow) ??
-              (window?.ethereum?.isRainbow ? window.ethereum : undefined)
-            );
-          },
-        },
-      }),
-      WalletConnect: walletConnect({
-        projectId: walletConnectProjectId,
-        showQrModal: false,
-      }),
-    };
-
-    const value: WagmiRuntime = {
-      connectors,
-      config: createConfig({
-        chains: [robinhoodChain],
-        connectors: [
-          connectors.MetaMask,
-          connectors.Coinbase,
-          connectors.Rainbow,
-          connectors.WalletConnect,
-        ],
-        multiInjectedProviderDiscovery: false,
-        transports: {
-          [robinhoodChain.id]: http(elysiumRpcUrl),
-        },
-      }),
-    };
-
-    globalRuntime[runtimeKey] = value;
-    return value;
-  })();
-
-export const wagmiConnectors = runtime.connectors;
-export const wagmiConfig = runtime.config;
+export const wagmiConfig = getDefaultConfig({
+  appName: "ElyRush",
+  projectId: walletConnectProjectId,
+  chains: [elysiumTestnetChain],
+  transports: {
+    [elysiumTestnetChain.id]: http(elysiumRpcUrl),
+  },
+  ssr: true,
+});

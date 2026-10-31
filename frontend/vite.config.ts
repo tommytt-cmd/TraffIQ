@@ -12,4 +12,25 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Pass additional raw configuration directly to Vite using the 'vite' key
+  vite: {
+    environments: {
+      ssr: {
+        transport: {
+          // Bump Vite 6 environment transport timeout to 2 minutes
+          timeout: 120000, 
+        },
+      },
+    },
+    ssr: {
+      optimizeDeps: {
+        // Pre-bundle common heavy SSR dependencies to reduce cold-start compilation overhead
+        include: [
+          "@tanstack/react-start", 
+          "lucide-react", 
+          "zod"
+        ],
+      },
+    },
+  },
 });

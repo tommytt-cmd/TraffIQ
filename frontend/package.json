@@ -45,6 +45,7 @@
     "@tanstack/react-start": "^1.168.60",
     "@tanstack/router-plugin": "^1.168.23",
     "@web3icons/react": "^4.1.21",
+    "@rainbow-me/rainbowkit": "^2.2.11",
     "@x402/evm": "^2.23.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

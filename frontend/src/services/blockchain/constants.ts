@@ -19,18 +19,20 @@ export const CHAIN_KEYS = {
   ROBINHOOD: "ROBINHOOD",
 } as const;
 
-// Elysium mainnet. Override the RPC with VITE_ELYSIUM_RPC_URL when needed.
+// Kinetiq Elysium testnet. Override these values only when targeting another network.
 export const DEFAULT_CHAIN_ID = Number(
-  import.meta.env.VITE_ELYSIUM_CHAIN_ID ?? 99901,
+  import.meta.env.VITE_ELYSIUM_CHAIN_ID ?? 99801,
 );
 export const DEFAULT_RPC_URL =
-  import.meta.env.VITE_ELYSIUM_RPC_URL ?? "https://rpc-live.elysp.com";
+  import.meta.env.VITE_ELYSIUM_RPC_URL ??
+  "https://testnet-rpc.elysium.kinetiq.xyz";
 export const DEFAULT_EXPLORER_URL =
-  import.meta.env.VITE_BLOCK_EXPLORER ?? "https://scan.elysp.com";
+  import.meta.env.VITE_BLOCK_EXPLORER ??
+  "https://elysium.kinetiq.xyz/testnet-explorer";
 
 export const ROBINHOOD_CHAIN_INFO = {
   chainId: DEFAULT_CHAIN_ID,
-  chainName: "Elysium Chain",
+  chainName: "Kinetiq Elysium Testnet",
   rpcUrl: DEFAULT_RPC_URL,
   explorerUrl: DEFAULT_EXPLORER_URL,
   nativeCurrency: {
