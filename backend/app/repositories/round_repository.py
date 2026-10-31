@@ -64,11 +64,20 @@ class RoundRepository:
         result = await self.session.execute(select(Round).order_by(Round.created_at.desc()))
         return list(result.scalars().all())
 
-    async def list_history(self, limit: int = 10) -> list[Round]:
+    async def list_history(self, limit: int = 10, offset: int = 0) -> list[Round]:
         result = await self.session.execute(
             select(Round)
             .where(Round.status.in_([RoundStatus.SETTLED.value, RoundStatus.FINISHED.value]))
             .order_by(Round.round_number.desc())
             .limit(limit)
+            .offset(offset)
         )
         return list(result.scalars().all())
+
+    async def count_history(self) -> int:
+        result = await self.session.execute(
+            select(func.count(Round.id)).where(
+                Round.status.in_([RoundStatus.SETTLED.value, RoundStatus.FINISHED.value])
+            )
+        )
+        return int(result.scalar_one())

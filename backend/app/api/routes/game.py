@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.dependencies import get_bet_service, get_round_service
 from app.services.bet_service import BetService
@@ -62,9 +62,14 @@ async def bets(round_service: RoundService = Depends(get_round_service), bet_ser
     return [{"prediction": bet.prediction, "stake": bet.stake} for bet in bets]
 
 
-@router.get("/history", response_model=list[dict[str, object]])
-async def history(round_service: RoundService = Depends(get_round_service)) -> list[dict[str, object]]:
-    rounds = await round_service.round_repository.list_history(10)
+@router.get("/history")
+async def history(
+    limit: int = Query(default=10, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    round_service: RoundService = Depends(get_round_service),
+) -> dict[str, object]:
+    rounds = await round_service.round_repository.list_history(limit, offset)
+    total = await round_service.round_repository.count_history()
     history: list[dict[str, object]] = []
     for round_model in rounds:
         video = await round_service.video_repository.get_by_id(round_model.video_id) if round_model.video_id else None
@@ -81,4 +86,4 @@ async def history(round_service: RoundService = Depends(get_round_service)) -> l
             "final": final_count,
             "result": "over" if final_count > threshold else "under",
         })
-    return history[:10]
+    return {"items": history, "total": total, "limit": limit, "offset": offset}
