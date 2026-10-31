@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 
 import { useWallet } from "@/hooks/useWallet";
 
@@ -24,6 +25,26 @@ export const Route = createFileRoute("/wallet")({
 
 function WalletPage() {
   const wallet = useWallet();
+  const apiBase = (import.meta.env.VITE_GAME_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
+  const activityQuery = useQuery({
+    queryKey: ["wallet-activity", wallet.address?.toLowerCase()],
+    enabled: Boolean(wallet.connected && wallet.address),
+    queryFn: async () => {
+      const historyResponse = await fetch(`${apiBase}/api/v1/profile/history?wallet_address=${encodeURIComponent(wallet.address!)}`, { cache: "no-store" });
+      if (!historyResponse.ok) throw new Error("Could not load bet history.");
+      const bets = await historyResponse.json() as Array<Record<string, any>>;
+      const settledBets = await Promise.all(bets.filter((bet) => bet.round_id).map(async (bet) => {
+        try {
+          const response = await fetch(`${apiBase}/rounds/${bet.round_id}/players/${encodeURIComponent(wallet.address!)}/settlement`, { cache: "no-store" });
+          return { ...bet, settlement: response.ok ? await response.json() : null };
+        } catch {
+          return { ...bet, settlement: null };
+        }
+      }));
+      return settledBets;
+    },
+    staleTime: 30_000,
+  });
 
   const connectWallet = async () => {
     try {
@@ -53,7 +74,9 @@ function WalletPage() {
           <div className="space-y-5">
             <div>
               <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Connected wallet</p>
-              <p className="mt-2 font-mono text-lg text-foreground">{wallet.address}</p>
+              <p className="mt-2 max-w-full truncate font-mono text-lg text-foreground" title={wallet.address}>
+                {wallet.address.slice(0, 8)}…{wallet.address.slice(-6)}
+              </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
@@ -110,6 +133,10 @@ function WalletPage() {
         )}
       </div>
 
+      {wallet.connected && wallet.address ? (
+        <WalletActivity bets={activityQuery.data ?? []} isLoading={activityQuery.isLoading} error={activityQuery.error} />
+      ) : null}
+
       <div className="mt-8 flex flex-wrap gap-3">
         <Link
           to="/"
@@ -123,6 +150,62 @@ function WalletPage() {
         >
           Learn the flow
         </Link>
+      </div>
+    </div>
+  );
+}
+
+function WalletActivity({ bets, isLoading, error }: { bets: Array<Record<string, any>>; isLoading: boolean; error: Error | null }) {
+  const winners = bets.filter((bet) => bet.status === "WON" || bet.settlement?.is_winner === true);
+  const claimed = winners.filter((bet) => bet.settlement?.has_claimed || bet.settlement?.claim_status === "CLAIMED");
+  const awaiting = winners.filter((bet) => !bet.settlement?.has_claimed && (bet.settlement?.claim_status === "AVAILABLE" || Number(bet.settlement?.pending_eth ?? 0) > 0));
+  const sections = [
+    { title: "Bet history", items: bets, kind: "all" },
+    { title: "Winning rounds", items: winners, kind: "wins" },
+    { title: "Claimed rounds", items: claimed, kind: "claimed" },
+    { title: "Awaiting claim", items: awaiting, kind: "awaiting" },
+  ] as const;
+
+  return (
+    <div className="mt-10 space-y-6">
+      <div>
+        <p className="label-tech">Wallet activity</p>
+        <h2 className="mt-2 text-3xl">Bets and winnings</h2>
+      </div>
+      {error ? <p className="rounded-2xl border border-rose-400/40 bg-rose-400/10 p-4 text-sm text-rose-200">{error.message}</p> : null}
+      <div className="grid gap-5 lg:grid-cols-2">
+        {sections.map((section) => (
+          <section key={section.kind} className="min-w-0 rounded-3xl border border-border bg-surface-2/70 p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3 className="text-xl">{section.title}</h3>
+              <span className="rounded-full border border-border px-3 py-1 font-mono text-xs text-muted-foreground">{section.items.length}</span>
+            </div>
+            {isLoading ? <p className="py-4 text-sm text-muted-foreground">Loading activity…</p> : section.items.length === 0 ? (
+              <p className="py-4 text-sm text-muted-foreground">No {section.kind === "all" ? "bets" : "rounds"} to show yet.</p>
+            ) : (
+              <ul className="divide-y divide-border/70">
+                {section.items.map((bet) => {
+                  const round = bet.round_number == null ? "—" : `#${bet.round_number}`;
+                  const stake = (Number(bet.stake ?? 0) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 4 });
+                  const payout = Number(bet.settlement?.pending_eth ?? bet.settlement?.claimable_eth ?? 0) / 1e18;
+                  const outcome = bet.settlement?.has_claimed ? "Claimed" : bet.settlement?.claim_status === "AVAILABLE" ? "Awaiting claim" : bet.status;
+                  return (
+                    <li key={bet.bet_id} className="flex min-w-0 items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                      <div className="min-w-0">
+                        <p className="font-mono text-sm">Round {round}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Prediction {bet.prediction} · {stake} HYPE staked</p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-xs text-muted-foreground">{outcome ?? "Pending"}</p>
+                        {payout > 0 ? <p className="mt-1 font-mono text-xs text-primary">{payout.toLocaleString(undefined, { maximumFractionDigits: 4 })} HYPE</p> : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        ))}
       </div>
     </div>
   );
