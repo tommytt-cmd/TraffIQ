@@ -30,8 +30,11 @@ export const elysiumTestnetChain = defineChain({
   testnet: true,
 });
 
+// RainbowKit throws while creating the app config if the ID is empty. Its
+// documented placeholder keeps the rest of the site renderable until a
+// production-specific WalletConnect project ID is configured.
 const walletConnectProjectId =
-  import.meta.env["VITE_WALLETCONNECT_PROJECT_ID"] ?? "";
+  import.meta.env["VITE_WALLETCONNECT_PROJECT_ID"] || "YOUR_PROJECT_ID";
 
 export const wagmiConfig = getDefaultConfig({
   appName: "ElyRush",
