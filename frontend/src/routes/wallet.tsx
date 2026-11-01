@@ -100,6 +100,55 @@ function WalletPage() {
     }
   };
 
+  const activityBets = activityQuery.data ?? [];
+  const wonBets = activityBets.filter((bet) =>
+    typeof bet.settlement?.is_winner === "boolean"
+      ? bet.settlement.is_winner
+      : bet.status === "WON",
+  );
+  const settledBets = activityBets.filter((bet) =>
+    typeof bet.settlement?.is_winner === "boolean" ||
+    bet.status === "WON" ||
+    bet.status === "LOST",
+  );
+  const totalWinnings = activityBets.reduce((total, bet) => {
+    const pending = bet.onchainWinnings?.pending != null
+      ? Number(bet.onchainWinnings.pending) / 1e18
+      : Number(bet.settlement?.pending_eth ?? 0);
+    return total + (Number.isFinite(pending) ? pending : 0);
+  }, 0);
+  const winRate = settledBets.length
+    ? (wonBets.length / settledBets.length) * 100
+    : 0;
+  const kpis = [
+    {
+      label: "HYPE balance",
+      value: `${wallet.balance.toLocaleString(undefined, { maximumFractionDigits: 4 })} HYPE`,
+      detail: "On Elysium",
+      accent: "bg-primary text-primary-foreground",
+    },
+    {
+      label: "Total bets",
+      value: activityQuery.isLoading ? "…" : activityBets.length.toLocaleString(),
+      detail: "All recorded rounds",
+      accent: "bg-background text-foreground",
+    },
+    {
+      label: "Claimable winnings",
+      value: activityQuery.isLoading
+        ? "…"
+        : `${totalWinnings.toLocaleString(undefined, { maximumFractionDigits: 4 })} HYPE`,
+      detail: "Available to claim",
+      accent: "bg-emerald-500 text-black",
+    },
+    {
+      label: "Win rate",
+      value: activityQuery.isLoading ? "…" : `${winRate.toFixed(1)}%`,
+      detail: `${wonBets.length} rounds won`,
+      accent: "bg-secondary text-secondary-foreground",
+    },
+  ];
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
       <p className="label-tech">Wallet</p>
@@ -107,39 +156,36 @@ function WalletPage() {
         Manage your <span className="text-primary">Ely</span>Rush wallet
       </h1>
 
-      <div className="mt-10 rounded-3xl border border-border bg-surface-2/70 p-6">
+      <div className="mt-10 border-2 border-foreground bg-surface-2/70 p-5 shadow-[6px_6px_0_hsl(var(--foreground))] sm:p-6">
         {connected && connectedAddress ? (
           <div className="space-y-5">
-            <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Connected wallet</p>
-              <p className="mt-2 max-w-full truncate font-mono text-lg text-foreground" title={connectedAddress}>
-                {connectedAddress.slice(0, 8)}…{connectedAddress.slice(-6)}
-              </p>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {kpis.map((kpi) => (
+                <div key={kpi.label} className={`clip-tag min-w-0 border-2 border-foreground p-4 shadow-[3px_3px_0_hsl(var(--foreground))] ${kpi.accent}`}>
+                  <p className="font-display text-[0.65rem] font-black uppercase tracking-[0.16em]">{kpi.label}</p>
+                  <p className="mt-3 truncate font-mono text-xl font-bold tabular-nums sm:text-2xl" title={kpi.value}>{kpi.value}</p>
+                  <p className="mt-1 truncate text-xs opacity-75">{kpi.detail}</p>
+                </div>
+              ))}
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
-              {/*<div className="rounded-2xl border border-border bg-background p-4">
-                <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Status</p>
-                <p className="mt-2 text-sm text-foreground">{wallet.status}</p>
-              </div>
-              <div className="rounded-2xl border border-border bg-background p-4">
-                <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Balance</p>
-                <p className="mt-2 text-sm text-foreground">{wallet.balance.toFixed(4)} HYPE</p>
-              </div>*/}
-              <div className="rounded-2xl border border-border bg-background p-4">
-                <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Network</p>
-                <p className="mt-2 text-sm text-foreground">
-                  {isCorrectNetwork ? `Elysium` : `Wrong network`}
+            <div className="flex flex-col justify-between gap-4 border-t-2 border-foreground pt-4 sm:flex-row sm:items-end">
+              <div className="min-w-0">
+                <p className="font-display text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Connected wallet</p>
+                <p className="mt-1 max-w-full truncate font-mono text-sm text-foreground" title={connectedAddress}>
+                  {connectedAddress.slice(0, 8)}…{connectedAddress.slice(-6)}
+                </p>
+                <p className="mt-2 font-mono text-xs uppercase text-muted-foreground">
+                  Network: <span className={isCorrectNetwork ? "font-bold text-emerald-500" : "font-bold text-rose-500"}>{isCorrectNetwork ? "Elysium" : "Wrong network"}</span>
                 </p>
               </div>
-            </div>
 
-            <div className="flex flex-wrap gap-3">
+              <div className="flex shrink-0 flex-wrap gap-3">
               {!isCorrectNetwork ? (
                 <button
                   type="button"
                   onClick={() => void wallet.switchNetwork()}
-                  className="rounded-full bg-primary px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-primary-foreground"
+                  className="clip-tag border-2 border-foreground bg-primary px-5 py-3 font-display text-xs font-black uppercase tracking-[0.16em] text-primary-foreground shadow-[3px_3px_0_hsl(var(--foreground))]"
                 >
                   Switch network
                 </button>
@@ -148,10 +194,11 @@ function WalletPage() {
               <button
                 type="button"
                 onClick={() => void disconnectWallet()}
-                className="rounded-full border border-border bg-background px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-foreground"
+                className="clip-tag border-2 border-foreground bg-background px-5 py-3 font-display text-xs font-black uppercase tracking-[0.16em] text-foreground shadow-[3px_3px_0_hsl(var(--foreground))] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_hsl(var(--foreground))]"
               >
                 Disconnect
               </button>
+              </div>
             </div>
           </div>
         ) : (
@@ -163,7 +210,7 @@ function WalletPage() {
             <button
               type="button"
               onClick={() => void connectWallet()}
-              className="clip-tag bg-primary px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.16em] text-primary-foreground"
+              className="clip-tag bg-primary px-5 py-3 font-display flex text-xs font-bold uppercase tracking-[0.16em] text-primary-foreground"
             >
               <Wallet className="h-4 w-4" />
               Connect wallet
@@ -174,7 +221,7 @@ function WalletPage() {
 
       {connected && connectedAddress ? (
         <WalletActivity
-          bets={activityQuery.data ?? []}
+          bets={activityBets}
           isLoading={activityQuery.isLoading}
           error={activityQuery.error}
           claimingRound={claimingRound}
@@ -233,42 +280,36 @@ function WalletActivity({ bets, isLoading, error, claimingRound, onClaim }: {
       </div>
       {error ? <p className="rounded-2xl border border-rose-400/40 bg-rose-400/10 p-4 text-sm text-rose-200">{error.message}</p> : null}
       <section className="panel overflow-x-auto">
-        <table className="w-full min-w-[760px] border-collapse text-left">
+        <table className="w-full min-w-[480px] border-collapse text-left">
           <thead>
             <tr className="border-b border-border">
               <th className="label-tech px-2 py-3 text-right">Round</th>
-              <th className="label-tech px-4 py-3">Status</th>
-              <th className="label-tech px-2 py-3">Wager</th>
-              {/*<th className="label-tech px-2 py-3">Amount won / lost</th>*/}
-              {/*<th className="label-tech px-2 py-3">Prediction</th>*/}
               <th className="label-tech px-2 py-3">Result</th>
-              <th className="label-tech px-4 py-3 text-right">Claim</th>
+              <th className="label-tech px-2 py-3">Winnings</th>
+              <th className="label-tech px-4 py-3 text-right">Action</th>
               
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">Loading bet history…</td></tr>
+              <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-muted-foreground">Loading bet history…</td></tr>
             ) : bets.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">No bets yet.</td></tr>
+              <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-muted-foreground">No bets yet.</td></tr>
             ) : bets.map((bet) => {
-              const stake = Number(bet.stake ?? 0) / 1e18;
               const won = isWinner(bet) || pendingWinnings(bet);
               const canClaim = Boolean(
                 bet.round_number != null &&
                 !hasClaimed(bet) &&
                 hasClaimableWinnings(bet),
               );
-              const resultAmount = won ? stake : bet.status === "LOST" ? -stake : 0;
-              const prediction = Number(bet.prediction) === 0
-                ? "OVER"
-                : Number(bet.prediction) === 1
-                  ? "UNDER"
-                  : "—";
+              const winningsWei = bet.onchainWinnings?.pending;
+              const winningsEth = winningsWei != null
+                ? Number(winningsWei) / 1e18
+                : Number(bet.settlement?.pending_eth ?? 0);
               return (
                 <tr key={bet.bet_id} className="border-b border-border/60 last:border-0">
                   <td className="px-4 py-3 text-right font-mono text-xs text-muted-foreground">{bet.round_number == null ? "—" : `#${bet.round_number}`}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-3">
                     <span className={won
                       ? "clip-tag border border-emerald-500 bg-emerald-500/15 px-2 py-0.5 font-mono text-[0.625rem] uppercase text-emerald-700"
                       : bet.status === "LOST"
@@ -277,13 +318,11 @@ function WalletActivity({ bets, isLoading, error, claimingRound, onClaim }: {
                       {won ? "Won" : bet.status === "LOST" ? "Lost" : "Pending"}
                     </span>
                   </td>
-                  <td className="px-2 py-3 font-mono text-sm tabular-nums">{stake.toLocaleString(undefined, { maximumFractionDigits: 4 })} HYPE</td>
-                  {/*<td className={`px-2 py-3 font-mono text-sm tabular-nums ${resultAmount > 0 ? "text-emerald-700" : resultAmount < 0 ? "text-rose-700" : "text-muted-foreground"}`}>
-                    {resultAmount > 0 ? "+" : ""}{resultAmount.toLocaleString(undefined, { maximumFractionDigits: 4 })} HYPE
+                  <td className="px-2 py-3 font-mono text-sm tabular-nums">
+                    {winningsEth > 0
+                      ? `${winningsEth.toLocaleString(undefined, { maximumFractionDigits: 4 })} HYPE`
+                      : "—"}
                   </td>
-                  <td className="px-2 py-3 font-mono text-sm">{prediction}</td>*/}
-                  {/* Profile history's result is the settled round's final count. */}
-                  <td className="px-2 py-3 font-mono text-sm tabular-nums">{bet.result ?? "—"}</td>
                   <td className="px-4 py-3 text-right">
                     {canClaim ? (
                       <button
