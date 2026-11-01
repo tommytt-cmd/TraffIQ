@@ -4,12 +4,14 @@ import type { WalletAccount, WalletConnectorName } from "./types";
 import {
   CoinbaseConnector,
   MetaMaskConnector,
+  RabbyConnector,
   RainbowConnector,
   WalletConnectConnector,
 } from "./connectors";
 
 const CONNECTOR_MAP: Record<WalletConnectorName, typeof MetaMaskConnector> = {
   MetaMask: MetaMaskConnector,
+  "Rabby Wallet": RabbyConnector,
   "Coinbase Wallet": CoinbaseConnector,
   Rainbow: RainbowConnector,
   WalletConnect: WalletConnectConnector,
@@ -69,6 +71,7 @@ export class WalletService {
     if (typeof window === "undefined") return null;
     const connector = localStorage.getItem(WALLET_LOCAL_STORAGE_KEY);
     return connector === "MetaMask" ||
+      connector === "Rabby Wallet" ||
       connector === "Coinbase Wallet" ||
       connector === "Rainbow" ||
       connector === "WalletConnect"

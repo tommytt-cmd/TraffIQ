@@ -2,9 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useAccount } from "wagmi";
 
 import { useWallet } from "@/hooks/useWallet";
 import { BettingContractService } from "@/services/blockchain/bettingContractService";
+import { elysiumTestnetChain } from "@/services/blockchain/wagmi";
 
 export const Route = createFileRoute("/wallet")({
   head: () => ({
@@ -28,22 +31,27 @@ export const Route = createFileRoute("/wallet")({
 
 function WalletPage() {
   const wallet = useWallet();
+  const { address: accountAddress, chainId } = useAccount();
+  const { openConnectModal } = useConnectModal();
+  const connectedAddress = accountAddress ?? wallet.address;
+  const connected = Boolean(accountAddress && chainId);
+  const isCorrectNetwork = chainId === elysiumTestnetChain.id;
   const [claimingRound, setClaimingRound] = useState<number | null>(null);
   const apiBase = (import.meta.env.VITE_GAME_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
   const activityQuery = useQuery({
-    queryKey: ["wallet-activity", wallet.address?.toLowerCase()],
-    enabled: Boolean(wallet.connected && wallet.address),
+    queryKey: ["wallet-activity", connectedAddress?.toLowerCase()],
+    enabled: Boolean(connected && connectedAddress),
     queryFn: async () => {
-      const historyResponse = await fetch(`${apiBase}/api/v1/profile/history?wallet_address=${encodeURIComponent(wallet.address!)}`, { cache: "no-store" });
+      const historyResponse = await fetch(`${apiBase}/api/v1/profile/history?wallet_address=${encodeURIComponent(connectedAddress!)}`, { cache: "no-store" });
       if (!historyResponse.ok) throw new Error("Could not load bet history.");
       const bets = await historyResponse.json() as Array<Record<string, any>>;
       const settledBets = await Promise.all(bets.filter((bet) => bet.round_id).map(async (bet) => {
         const [settlement, onchainWinnings] = await Promise.all([
-          fetch(`${apiBase}/rounds/${bet.round_id}/players/${encodeURIComponent(wallet.address!)}/settlement`, { cache: "no-store" })
+          fetch(`${apiBase}/rounds/${bet.round_id}/players/${encodeURIComponent(connectedAddress!)}/settlement`, { cache: "no-store" })
             .then(async (response) => response.ok ? await response.json() : null)
             .catch(() => null),
-          wallet.provider && wallet.address && bet.round_number != null
-            ? BettingContractService.getRoundWinningsStatus(wallet.provider, Number(bet.round_number), wallet.address as `0x${string}`)
+          wallet.provider && connectedAddress && bet.round_number != null
+            ? BettingContractService.getRoundWinningsStatus(wallet.provider, Number(bet.round_number), connectedAddress as `0x${string}`)
                 .then((status) => ({ pending: status.pending.toString(), claimed: status.claimed }))
                 .catch(() => null)
             : Promise.resolve(null),
@@ -56,7 +64,7 @@ function WalletPage() {
   });
 
   const claimWinnings = async (roundNumber: number) => {
-    if (!wallet.provider || !wallet.signer || !wallet.address || !wallet.isCorrectNetwork) {
+    if (!wallet.provider || !wallet.signer || !connectedAddress || !isCorrectNetwork) {
       toast.error("Connect your wallet to Elysium before claiming.");
       return;
     }
@@ -66,7 +74,7 @@ function WalletPage() {
       const winnings = await BettingContractService.getRoundWinningsStatus(
         wallet.provider,
         roundNumber,
-        wallet.address as `0x${string}`,
+        connectedAddress as `0x${string}`,
       );
       if (winnings.claimed) throw new Error("Winnings for this round have already been claimed.");
       if (winnings.pending === 0n) throw new Error("This round has no claimable HYPE for your wallet.");
@@ -81,13 +89,7 @@ function WalletPage() {
     }
   };
 
-  const connectWallet = async () => {
-    try {
-      await wallet.connect("MetaMask");
-    } catch (error) {
-      console.error("Wallet connect failed", error);
-    }
-  };
+  const connectWallet = () => openConnectModal?.();
 
   const disconnectWallet = async () => {
     try {
@@ -105,12 +107,12 @@ function WalletPage() {
       </h1>
 
       <div className="mt-10 rounded-3xl border border-border bg-surface-2/70 p-6">
-        {wallet.connected && wallet.address ? (
+        {connected && connectedAddress ? (
           <div className="space-y-5">
             <div>
               <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Connected wallet</p>
-              <p className="mt-2 max-w-full truncate font-mono text-lg text-foreground" title={wallet.address}>
-                {wallet.address.slice(0, 8)}…{wallet.address.slice(-6)}
+              <p className="mt-2 max-w-full truncate font-mono text-lg text-foreground" title={connectedAddress}>
+                {connectedAddress.slice(0, 8)}…{connectedAddress.slice(-6)}
               </p>
             </div>
 
@@ -126,13 +128,13 @@ function WalletPage() {
               <div className="rounded-2xl border border-border bg-background p-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Network</p>
                 <p className="mt-2 text-sm text-foreground">
-                  {wallet.isCorrectNetwork ? `Elysium` : `Wrong network`}
+                  {isCorrectNetwork ? `Elysium` : `Wrong network`}
                 </p>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-3">
-              {!wallet.isCorrectNetwork ? (
+              {!isCorrectNetwork ? (
                 <button
                   type="button"
                   onClick={() => void wallet.switchNetwork()}
@@ -168,7 +170,7 @@ function WalletPage() {
         )}
       </div>
 
-      {wallet.connected && wallet.address ? (
+      {connected && connectedAddress ? (
         <WalletActivity
           bets={activityQuery.data ?? []}
           isLoading={activityQuery.isLoading}

@@ -88,6 +88,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       switch (connectorName) {
         case "MetaMask":
           return name.includes("metamask") || id.includes("metamask");
+        case "Rabby Wallet":
+          return name.includes("rabby") || id.includes("rabby");
         case "Coinbase Wallet":
           return name.includes("coinbase") || id.includes("coinbase");
         case "Rainbow":
@@ -135,6 +137,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const providerName = connector?.name ? String(connector.name) : null;
     const normalizedProviderName =
       providerName === "MetaMask" ||
+      providerName === "Rabby Wallet" ||
       providerName === "Coinbase Wallet" ||
       providerName === "Rainbow" ||
       providerName === "WalletConnect"

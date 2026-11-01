@@ -1,4 +1,11 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import {
+  coinbaseWallet,
+  metaMaskWallet,
+  rabbyWallet,
+  rainbowWallet,
+  walletConnectWallet,
+} from "@rainbow-me/rainbowkit/wallets";
 import { http, defineChain } from "viem";
 
 const elysiumRpcUrl =
@@ -40,6 +47,12 @@ export const wagmiConfig = getDefaultConfig({
   appName: "ElyRush",
   projectId: walletConnectProjectId,
   chains: [elysiumTestnetChain],
+  wallets: [
+    {
+      groupName: "Popular",
+      wallets: [metaMaskWallet, rabbyWallet, coinbaseWallet, rainbowWallet, walletConnectWallet],
+    },
+  ],
   transports: {
     [elysiumTestnetChain.id]: http(elysiumRpcUrl),
   },
