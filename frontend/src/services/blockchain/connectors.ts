@@ -30,17 +30,6 @@ export const WalletConnectConnector: WalletConnector = {
   installed: () => false,
 };
 
-export const CoinbaseConnector: WalletConnector = {
-  id: "Coinbase Wallet",
-  label: "Coinbase Wallet",
-  installed: () =>
-    typeof window !== "undefined" &&
-    Boolean(
-      window.ethereum?.isCoinbaseWallet ||
-      window.ethereum?.providers?.some((provider) => provider.isCoinbaseWallet),
-    ),
-};
-
 export const RainbowConnector: WalletConnector = {
   id: "Rainbow",
   label: "Rainbow",
@@ -55,7 +44,6 @@ export const RainbowConnector: WalletConnector = {
 export const CONNECTORS = [
   MetaMaskConnector,
   RabbyConnector,
-  CoinbaseConnector,
   RainbowConnector,
   WalletConnectConnector,
 ];

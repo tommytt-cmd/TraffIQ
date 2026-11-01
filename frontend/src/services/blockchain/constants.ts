@@ -1,7 +1,6 @@
 export const WALLET_CONNECTORS = {
   METAMASK: "MetaMask",
   RABBY: "Rabby Wallet",
-  COINBASE: "Coinbase Wallet",
   RAINBOW: "Rainbow",
   WALLETCONNECT: "WalletConnect",
 } as const;
@@ -9,7 +8,6 @@ export const WALLET_CONNECTORS = {
 export const SUPPORTED_WALLETS = [
   WALLET_CONNECTORS.METAMASK,
   WALLET_CONNECTORS.RABBY,
-  WALLET_CONNECTORS.COINBASE,
   WALLET_CONNECTORS.RAINBOW,
   WALLET_CONNECTORS.WALLETCONNECT,
 ] as const;

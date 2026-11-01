@@ -51,11 +51,11 @@ const META: Record<string, WalletMeta> = {
     accent: "#1d7cf2",
     glyph: "◉",
   },
-  coinbaseWalletSDK: {
-    label: "Coinbase Wallet",
-    blurb: "Open in Coinbase Wallet app",
-    accent: "#0052ff",
-    glyph: "◍",
+  rabby: {
+    label: "Rabby Wallet",
+    blurb: "Open in Rabby Wallet",
+    accent: "#7c5cff",
+    glyph: "R",
   },
   "io.metamask": {
     label: "MetaMask",

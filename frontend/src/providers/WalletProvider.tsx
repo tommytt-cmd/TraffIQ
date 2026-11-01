@@ -90,8 +90,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           return name.includes("metamask") || id.includes("metamask");
         case "Rabby Wallet":
           return name.includes("rabby") || id.includes("rabby");
-        case "Coinbase Wallet":
-          return name.includes("coinbase") || id.includes("coinbase");
         case "Rainbow":
           return name.includes("rainbow") || id.includes("rainbow");
         case "WalletConnect":
@@ -138,7 +136,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const normalizedProviderName =
       providerName === "MetaMask" ||
       providerName === "Rabby Wallet" ||
-      providerName === "Coinbase Wallet" ||
       providerName === "Rainbow" ||
       providerName === "WalletConnect"
         ? (providerName as WalletConnectorName)

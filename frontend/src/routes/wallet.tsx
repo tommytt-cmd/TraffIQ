@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Wallet } from "lucide-react";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
 
@@ -117,14 +118,14 @@ function WalletPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-border bg-background p-4">
+              {/*<div className="rounded-2xl border border-border bg-background p-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Status</p>
                 <p className="mt-2 text-sm text-foreground">{wallet.status}</p>
               </div>
               <div className="rounded-2xl border border-border bg-background p-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Balance</p>
                 <p className="mt-2 text-sm text-foreground">{wallet.balance.toFixed(4)} HYPE</p>
-              </div>
+              </div>*/}
               <div className="rounded-2xl border border-border bg-background p-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Network</p>
                 <p className="mt-2 text-sm text-foreground">
@@ -162,8 +163,9 @@ function WalletPage() {
             <button
               type="button"
               onClick={() => void connectWallet()}
-              className="rounded-full bg-primary px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-primary-foreground"
+              className="clip-tag bg-primary px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.16em] text-primary-foreground"
             >
+              <Wallet className="h-4 w-4" />
               Connect wallet
             </button>
           </div>
@@ -234,11 +236,11 @@ function WalletActivity({ bets, isLoading, error, claimingRound, onClaim }: {
         <table className="w-full min-w-[760px] border-collapse text-left">
           <thead>
             <tr className="border-b border-border">
-              <th className="label-tech px-2 py-3 text-right">Round ID</th>
-              <th className="label-tech px-4 py-3">Won / Lost</th>
-              <th className="label-tech px-2 py-3">Stake</th>
-              <th className="label-tech px-2 py-3">Amount won / lost</th>
-              <th className="label-tech px-2 py-3">Prediction</th>
+              <th className="label-tech px-2 py-3 text-right">Round</th>
+              <th className="label-tech px-4 py-3">Status</th>
+              <th className="label-tech px-2 py-3">Wager</th>
+              {/*<th className="label-tech px-2 py-3">Amount won / lost</th>*/}
+              {/*<th className="label-tech px-2 py-3">Prediction</th>*/}
               <th className="label-tech px-2 py-3">Result</th>
               <th className="label-tech px-4 py-3 text-right">Claim</th>
               
@@ -276,10 +278,10 @@ function WalletActivity({ bets, isLoading, error, claimingRound, onClaim }: {
                     </span>
                   </td>
                   <td className="px-2 py-3 font-mono text-sm tabular-nums">{stake.toLocaleString(undefined, { maximumFractionDigits: 4 })} HYPE</td>
-                  <td className={`px-2 py-3 font-mono text-sm tabular-nums ${resultAmount > 0 ? "text-emerald-700" : resultAmount < 0 ? "text-rose-700" : "text-muted-foreground"}`}>
+                  {/*<td className={`px-2 py-3 font-mono text-sm tabular-nums ${resultAmount > 0 ? "text-emerald-700" : resultAmount < 0 ? "text-rose-700" : "text-muted-foreground"}`}>
                     {resultAmount > 0 ? "+" : ""}{resultAmount.toLocaleString(undefined, { maximumFractionDigits: 4 })} HYPE
                   </td>
-                  <td className="px-2 py-3 font-mono text-sm">{prediction}</td>
+                  <td className="px-2 py-3 font-mono text-sm">{prediction}</td>*/}
                   {/* Profile history's result is the settled round's final count. */}
                   <td className="px-2 py-3 font-mono text-sm tabular-nums">{bet.result ?? "—"}</td>
                   <td className="px-4 py-3 text-right">

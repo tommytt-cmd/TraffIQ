@@ -4,7 +4,7 @@ export type ConnectionStatus =
   "idle" | "connecting" | "connected" | "disconnected" | "error";
 
 export type WalletConnectorName =
-  "MetaMask" | "Rabby Wallet" | "Coinbase Wallet" | "Rainbow" | "WalletConnect";
+  "MetaMask" | "Rabby Wallet" | "Rainbow" | "WalletConnect";
 
 export interface WalletAccount {
   address: string;

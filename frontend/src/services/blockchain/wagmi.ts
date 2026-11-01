@@ -1,6 +1,5 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import {
-  coinbaseWallet,
   metaMaskWallet,
   rabbyWallet,
   rainbowWallet,
@@ -50,7 +49,7 @@ export const wagmiConfig = getDefaultConfig({
   wallets: [
     {
       groupName: "Popular",
-      wallets: [metaMaskWallet, rabbyWallet, coinbaseWallet, rainbowWallet, walletConnectWallet],
+      wallets: [metaMaskWallet, rabbyWallet, rainbowWallet, walletConnectWallet],
     },
   ],
   transports: {
