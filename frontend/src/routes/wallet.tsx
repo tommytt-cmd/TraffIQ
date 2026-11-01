@@ -91,7 +91,7 @@ function WalletPage() {
               <div className="rounded-2xl border border-border bg-background p-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Network</p>
                 <p className="mt-2 text-sm text-foreground">
-                  {wallet.isCorrectNetwork ? "Elysium" : `${wallet.chainName} Wrong network`}
+                  {wallet.isCorrectNetwork ? "Elysium" : `${wallet.chainName} ${wallet.chainId} Wrong network`}
                 </p>
               </div>
             </div>

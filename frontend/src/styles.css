@@ -4,7 +4,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ElyRush neo-brutalist system: paper, ink, signal lime, and hard shadows. */
+/*
+ * TRAFFIC / XOTC-inspired cyberpunk design system.
+ * Midnight blue, electric blue, and restrained coral accents.
+ * All colors are oklch semantic tokens — never hardcode colors in components.
+ */
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 2px);
@@ -42,54 +46,62 @@
 }
 
 :root {
-  --radius: 0rem;
-  --background: oklch(0.96 0.025 95);
-  --foreground: oklch(0.17 0.015 145);
-  --surface: oklch(0.99 0.01 95);
-  --surface-2: oklch(0.92 0.025 95);
-  --card: oklch(0.99 0.01 95);
-  --card-foreground: oklch(0.17 0.015 145);
-  --popover: oklch(0.99 0.01 95);
-  --popover-foreground: oklch(0.17 0.015 145);
-  --primary: oklch(0.86 0.24 128);
-  --primary-foreground: oklch(0.14 0.02 145);
-  --secondary: oklch(0.91 0.035 95);
-  --secondary-foreground: oklch(0.17 0.015 145);
-  --muted: oklch(0.91 0.035 95);
-  --muted-foreground: oklch(0.42 0.025 145);
-  --accent: oklch(0.82 0.17 78);
-  --accent-foreground: oklch(0.17 0.015 145);
-  --destructive: oklch(0.66 0.22 25);
-  --destructive-foreground: oklch(0.99 0.01 95);
-  --warning: oklch(0.82 0.17 78);
-  --warning-foreground: oklch(0.17 0.015 145);
-  --border: oklch(0.17 0.015 145);
-  --input: oklch(0.17 0.015 145);
-  --ring: oklch(0.65 0.18 128);
-  --grid: oklch(0.17 0.015 145 / 10%);
-  --glow-primary: 4px 4px 0 oklch(0.17 0.015 145);
-  --gradient-scan: linear-gradient(180deg, transparent, oklch(0.86 0.24 128 / 24%), transparent);
+  --radius: 0.25rem;
+  --background: oklch(0.18 0.03 260);
+  --foreground: oklch(0.97 0.01 250);
+  --surface: oklch(0.23 0.035 260);
+  --surface-2: oklch(0.27 0.04 260);
+  --card: oklch(0.23 0.035 260);
+  --card-foreground: oklch(0.97 0.01 250);
+  --popover: oklch(0.23 0.035 260);
+  --popover-foreground: oklch(0.97 0.01 250);
+  --primary: oklch(0.81 0.12 230);
+  --primary-foreground: oklch(0.17 0.025 240);
+  --secondary: oklch(0.3 0.03 255);
+  --secondary-foreground: oklch(0.97 0.01 250);
+  --muted: oklch(0.29 0.035 255);
+  --muted-foreground: oklch(0.71 0.035 250);
+  --accent: oklch(0.76 0.14 35);
+  --accent-foreground: oklch(0.22 0.04 35);
+  --destructive: oklch(0.63 0.23 22);
+  --destructive-foreground: oklch(0.98 0.01 20);
+  --warning: oklch(0.8 0.16 78);
+  --warning-foreground: oklch(0.2 0.04 70);
+  --border: oklch(0.35 0.035 255);
+  --input: oklch(0.31 0.035 255);
+  --ring: oklch(0.81 0.12 230);
+  --grid: oklch(0.29 0.035 255 / 55%);
+  --glow-primary: 0 0 24px oklch(0.81 0.12 230 / 35%);
+  --gradient-scan: linear-gradient(
+    180deg,
+    oklch(0.81 0.12 230 / 0%) 0%,
+    oklch(0.81 0.12 230 / 22%) 50%,
+    oklch(0.81 0.12 230 / 0%) 100%
+  );
 }
 
 .dark {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 @layer base {
   * {
-    border-color: var(--border);
-    box-sizing: border-box;
+    /* hide default borders — UI remains but without visible lines */
+    border-color: transparent;
   }
 
   html {
-    color-scheme: light;
+    color-scheme: dark;
   }
 
   body {
     /* Keep the app canvas aligned with the selected semantic palette. */
     background-color: var(--background);
-    background-image: radial-gradient(var(--grid) 1px, transparent 1px);
-    background-size: 18px 18px;
+    background-image:
+      radial-gradient(800px 400px at 8% 12%, oklch(0.81 0.12 230 / 8%), transparent 50%),
+      radial-gradient(700px 500px at 92% 88%, oklch(0.76 0.14 35 / 6%), transparent 48%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     scroll-behavior: smooth;
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -112,70 +124,35 @@
 
 /* Clipped "tech panel" corners */
 @utility clip-tech {
-  clip-path: none;
+  clip-path: polygon(
+    22px 0,
+    100% 0,
+    100% calc(100% - 22px),
+    calc(100% - 22px) 100%,
+    0 100%,
+    0 22px
+  );
 }
 
 @utility clip-tag {
-  clip-path: none;
-  border: 2px solid var(--foreground);
-  box-shadow: 3px 3px 0 var(--foreground);
-  transition: transform 120ms ease, box-shadow 120ms ease;
-}
-
-.clip-tag:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 var(--foreground);
-}
-
-.clip-tag:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 var(--foreground);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  /* Subtle colored shadow follows the primary accent. */
+  box-shadow: 0 12px 30px color-mix(in oklch, var(--primary) 24%, transparent);
 }
 
 @utility panel {
   background-color: var(--color-surface);
-  border: 2px solid var(--foreground);
-  box-shadow: 5px 5px 0 var(--foreground);
-  clip-path: none;
-  border-radius: 0;
+  /* subtle border to restore visual hierarchy */
+  border: 1px solid rgba(255,255,255,0.04);
+  clip-path: polygon(
+    22px 0,
+    100% 0,
+    100% calc(100% - 22px),
+    calc(100% - 22px) 100%,
+    0 100%,
+    0 22px
+  );
 }
-
-@layer components {
-  button, [role="button"] { cursor: pointer; }
-  input, textarea, select {
-    border: 2px solid var(--foreground) !important;
-    border-radius: 0 !important;
-    background-color: var(--surface) !important;
-    box-shadow: 2px 2px 0 var(--foreground);
-  }
-  :focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
-  ::selection { background: var(--primary); color: var(--foreground); }
-}
-
-/* Older page sections use rounded utility classes; keep their card geometry consistent. */
-div[class*="rounded-3xl"][class*="border"],
-div[class*="rounded-2xl"][class*="border"] {
-  border: 2px solid var(--foreground) !important;
-  border-radius: 0 !important;
-  box-shadow: 3px 3px 0 var(--foreground);
-}
-
-table { border-collapse: collapse; }
-th { background: var(--primary); color: var(--foreground); }
-th, td { border: 1.5px solid var(--foreground); }
-
-nav a[aria-current='true'], nav a.active {
-  color: var(--foreground);
-  background: var(--primary);
-  border-left: 0;
-  padding: 0.35rem 0.55rem;
-  box-shadow: 2px 2px 0 var(--foreground);
-}
-
-nav a:hover { transform: translateY(-2px); }
-
-header.sticky { background: var(--background); backdrop-filter: none; }
-footer { border-top: 2px solid var(--foreground) !important; }
 
 /* Docs-style nav + section animations */
 nav a {
