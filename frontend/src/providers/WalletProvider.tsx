@@ -53,7 +53,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const {
     connectAsync,
     connectors,
-    status: connectStatus,
     error: connectError,
   } = useConnect();
   const { disconnectAsync } = useDisconnect();
@@ -62,6 +61,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     address,
     connector,
     isConnected,
+    status: accountStatus,
     chainId: accountChainId,
   } = useAccount();
   const publicClient = usePublicClient({ chainId: elysiumTestnetChain.id });
@@ -143,17 +143,22 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       providerName === "WalletConnect"
         ? (providerName as WalletConnectorName)
         : null;
+    // RainbowKit restores the Wagmi connector asynchronously on reload. During
+    // that window Wagmi reports `reconnecting`, while useConnect() remains idle.
+    // Use the account state (and the same address/chain signal as the header)
+    // so the wallet page never treats a restored session as disconnected.
+    const accountReady = Boolean(address && chainId);
 
     return {
       ...initialState,
-      connected: isConnected,
+      connected: accountReady || isConnected,
       address: address ?? null,
       providerName: normalizedProviderName,
       chainId,
       chainName: elysiumTestnetChain.name,
-      status: isConnected
+      status: accountReady || isConnected
         ? "connected"
-        : connectStatus === "connecting"
+        : accountStatus === "connecting" || accountStatus === "reconnecting"
           ? "connecting"
           : "idle",
       balance: Number(balanceData?.formatted ?? "0"),
@@ -171,10 +176,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     };
   }, [
     isConnected,
+    accountStatus,
     address,
     connector,
     accountChainId,
-    connectStatus,
     connectors,
     connectError,
     balanceData,
