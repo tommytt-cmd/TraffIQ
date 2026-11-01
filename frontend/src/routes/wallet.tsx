@@ -91,7 +91,7 @@ function WalletPage() {
               <div className="rounded-2xl border border-border bg-background p-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Network</p>
                 <p className="mt-2 text-sm text-foreground">
-                  {wallet.isCorrectNetwork ? "Elysium" : "Wrong network"}
+                  {wallet.isCorrectNetwork ? "Elysium" : `${wallet.chainName} Wrong network`}
                 </p>
               </div>
             </div>
@@ -171,12 +171,13 @@ function WalletActivity({ bets, isLoading, error }: { bets: Array<Record<string,
         <table className="w-full min-w-[760px] border-collapse text-left">
           <thead>
             <tr className="border-b border-border">
+              <th className="label-tech px-2 py-3 text-right">Round ID</th>
               <th className="label-tech px-4 py-3">Won / Lost</th>
               <th className="label-tech px-2 py-3">Stake</th>
               <th className="label-tech px-2 py-3">Amount won / lost</th>
               <th className="label-tech px-2 py-3">Prediction</th>
               <th className="label-tech px-2 py-3">Result</th>
-              <th className="label-tech px-2 py-3 text-right">Round ID</th>
+              
             </tr>
           </thead>
           <tbody>
