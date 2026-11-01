@@ -175,7 +175,7 @@ function WalletActivity({ bets, isLoading, error }: { bets: Array<Record<string,
               <th className="label-tech px-2 py-3">Stake</th>
               <th className="label-tech px-2 py-3">Amount won / lost</th>
               <th className="label-tech px-2 py-3">Prediction</th>
-              <th className="label-tech px-2 py-3">Outcome</th>
+              <th className="label-tech px-2 py-3">Result</th>
               <th className="label-tech px-2 py-3 text-right">Round ID</th>
             </tr>
           </thead>
@@ -188,6 +188,11 @@ function WalletActivity({ bets, isLoading, error }: { bets: Array<Record<string,
               const stake = Number(bet.stake ?? 0) / 1e18;
               const won = bet.status === "WON" || bet.settlement?.is_winner === true;
               const resultAmount = won ? stake : bet.status === "LOST" ? -stake : 0;
+              const prediction = Number(bet.prediction) === 0
+                ? "OVER"
+                : Number(bet.prediction) === 1
+                  ? "UNDER"
+                  : "—";
               return (
                 <tr key={bet.bet_id} className="border-b border-border/60 last:border-0">
                   <td className="px-4 py-3">
@@ -203,7 +208,8 @@ function WalletActivity({ bets, isLoading, error }: { bets: Array<Record<string,
                   <td className={`px-2 py-3 font-mono text-sm tabular-nums ${resultAmount > 0 ? "text-emerald-700" : resultAmount < 0 ? "text-rose-700" : "text-muted-foreground"}`}>
                     {resultAmount > 0 ? "+" : ""}{resultAmount.toLocaleString(undefined, { maximumFractionDigits: 4 })} HYPE
                   </td>
-                  <td className="px-2 py-3 font-mono text-sm tabular-nums">{bet.prediction ?? "—"}</td>
+                  <td className="px-2 py-3 font-mono text-sm">{prediction}</td>
+                  {/* Profile history's result is the settled round's final count. */}
                   <td className="px-2 py-3 font-mono text-sm tabular-nums">{bet.result ?? "—"}</td>
                   <td className="px-4 py-3 text-right font-mono text-xs text-muted-foreground">{bet.round_number == null ? "—" : `#${bet.round_number}`}</td>
                 </tr>
