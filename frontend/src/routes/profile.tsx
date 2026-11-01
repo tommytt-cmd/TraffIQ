@@ -369,7 +369,7 @@ function ProfilePage() {
                         <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                           #{item.round_number ?? item.round_id?.slice(-6)}
                         </td>
-                        <td className="px-4 py-3">{item.prediction === 1 ? "Over" : "Under"}</td>
+                        <td className="px-4 py-3">{item.prediction === 0 ? "Over" : item.prediction === 1 ? "Under" : "—"}</td>
                         <td className="px-4 py-3 uppercase text-sm text-foreground">
                           {item.status.toLowerCase()}
                         </td>

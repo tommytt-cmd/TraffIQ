@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import { useWallet } from "@/hooks/useWallet";
+import { BettingContractService } from "@/services/blockchain/bettingContractService";
 
 export const Route = createFileRoute("/wallet")({
   head: () => ({
@@ -25,6 +28,7 @@ export const Route = createFileRoute("/wallet")({
 
 function WalletPage() {
   const wallet = useWallet();
+  const [claimingRound, setClaimingRound] = useState<number | null>(null);
   const apiBase = (import.meta.env.VITE_GAME_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
   const activityQuery = useQuery({
     queryKey: ["wallet-activity", wallet.address?.toLowerCase()],
@@ -34,17 +38,48 @@ function WalletPage() {
       if (!historyResponse.ok) throw new Error("Could not load bet history.");
       const bets = await historyResponse.json() as Array<Record<string, any>>;
       const settledBets = await Promise.all(bets.filter((bet) => bet.round_id).map(async (bet) => {
-        try {
-          const response = await fetch(`${apiBase}/rounds/${bet.round_id}/players/${encodeURIComponent(wallet.address!)}/settlement`, { cache: "no-store" });
-          return { ...bet, settlement: response.ok ? await response.json() : null };
-        } catch {
-          return { ...bet, settlement: null };
-        }
+        const [settlement, onchainWinnings] = await Promise.all([
+          fetch(`${apiBase}/rounds/${bet.round_id}/players/${encodeURIComponent(wallet.address!)}/settlement`, { cache: "no-store" })
+            .then(async (response) => response.ok ? await response.json() : null)
+            .catch(() => null),
+          wallet.provider && wallet.address && bet.round_number != null
+            ? BettingContractService.getRoundWinningsStatus(wallet.provider, Number(bet.round_number), wallet.address as `0x${string}`)
+                .then((status) => ({ pending: status.pending.toString(), claimed: status.claimed }))
+                .catch(() => null)
+            : Promise.resolve(null),
+        ]);
+        return { ...bet, settlement, onchainWinnings };
       }));
       return settledBets;
     },
     staleTime: 30_000,
   });
+
+  const claimWinnings = async (roundNumber: number) => {
+    if (!wallet.provider || !wallet.signer || !wallet.address || !wallet.isCorrectNetwork) {
+      toast.error("Connect your wallet to Elysium before claiming.");
+      return;
+    }
+
+    setClaimingRound(roundNumber);
+    try {
+      const winnings = await BettingContractService.getRoundWinningsStatus(
+        wallet.provider,
+        roundNumber,
+        wallet.address as `0x${string}`,
+      );
+      if (winnings.claimed) throw new Error("Winnings for this round have already been claimed.");
+      if (winnings.pending === 0n) throw new Error("This round has no claimable HYPE for your wallet.");
+      const hash = await BettingContractService.claimEth(wallet.signer, roundNumber);
+      await wallet.provider.waitForTransactionReceipt({ hash });
+      toast.success(`Round #${roundNumber} winnings claimed.`);
+      await activityQuery.refetch();
+    } catch (error) {
+      toast.error((error as Error).message || "Unable to claim round winnings.");
+    } finally {
+      setClaimingRound(null);
+    }
+  };
 
   const connectWallet = async () => {
     try {
@@ -91,7 +126,7 @@ function WalletPage() {
               <div className="rounded-2xl border border-border bg-background p-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Network</p>
                 <p className="mt-2 text-sm text-foreground">
-                  {wallet.isCorrectNetwork ? `Elysium ${wallet.chainName} ${wallet.chainId}` : `${wallet.chainName} ${wallet.chainId} Wrong network`}
+                  {wallet.isCorrectNetwork ? `Elysium` : `Wrong network`}
                 </p>
               </div>
             </div>
@@ -134,7 +169,13 @@ function WalletPage() {
       </div>
 
       {wallet.connected && wallet.address ? (
-        <WalletActivity bets={activityQuery.data ?? []} isLoading={activityQuery.isLoading} error={activityQuery.error} />
+        <WalletActivity
+          bets={activityQuery.data ?? []}
+          isLoading={activityQuery.isLoading}
+          error={activityQuery.error}
+          claimingRound={claimingRound}
+          onClaim={(roundNumber) => void claimWinnings(roundNumber)}
+        />
       ) : null}
 
       <div className="mt-8 flex flex-wrap gap-3">
@@ -155,10 +196,30 @@ function WalletPage() {
   );
 }
 
-function WalletActivity({ bets, isLoading, error }: { bets: Array<Record<string, any>>; isLoading: boolean; error: Error | null }) {
-  const winners = bets.filter((bet) => bet.status === "WON" || bet.settlement?.is_winner === true);
-  const claimed = winners.filter((bet) => bet.settlement?.has_claimed || bet.settlement?.claim_status === "CLAIMED");
-  const awaiting = winners.filter((bet) => !bet.settlement?.has_claimed && (bet.settlement?.claim_status === "AVAILABLE" || Number(bet.settlement?.pending_eth ?? 0) > 0));
+function WalletActivity({ bets, isLoading, error, claimingRound, onClaim }: {
+  bets: Array<Record<string, any>>;
+  isLoading: boolean;
+  error: Error | null;
+  claimingRound: number | null;
+  onClaim: (roundNumber: number) => void;
+}) {
+  const isWinner = (bet: Record<string, any>) =>
+    typeof bet.settlement?.is_winner === "boolean"
+      ? bet.settlement.is_winner
+      : bet.status === "WON";
+  const pendingWinnings = (bet: Record<string, any>) =>
+    Number(bet.onchainWinnings?.pending ?? bet.settlement?.pending_eth ?? 0) > 0;
+  const hasClaimableWinnings = (bet: Record<string, any>) =>
+    bet.onchainWinnings?.pending !== undefined
+      ? BigInt(bet.onchainWinnings.pending) > 0n
+      : bet.settlement?.claim_status === "AVAILABLE" || pendingWinnings(bet);
+  const hasClaimed = (bet: Record<string, any>) =>
+    typeof bet.onchainWinnings?.claimed === "boolean"
+      ? bet.onchainWinnings.claimed
+      : Boolean(bet.settlement?.has_claimed || bet.settlement?.claim_status === "CLAIMED");
+  const winners = bets.filter((bet) => isWinner(bet) || pendingWinnings(bet) || hasClaimed(bet));
+  const claimed = winners.filter(hasClaimed);
+  const awaiting = winners.filter((bet) => !hasClaimed(bet) && hasClaimableWinnings(bet));
 
   return (
     <div className="mt-10 space-y-6">
@@ -177,17 +238,23 @@ function WalletActivity({ bets, isLoading, error }: { bets: Array<Record<string,
               <th className="label-tech px-2 py-3">Amount won / lost</th>
               <th className="label-tech px-2 py-3">Prediction</th>
               <th className="label-tech px-2 py-3">Result</th>
+              <th className="label-tech px-4 py-3 text-right">Claim</th>
               
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">Loading bet history…</td></tr>
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">Loading bet history…</td></tr>
             ) : bets.length === 0 ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">No bets yet.</td></tr>
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">No bets yet.</td></tr>
             ) : bets.map((bet) => {
               const stake = Number(bet.stake ?? 0) / 1e18;
-              const won = bet.status === "WON" || bet.settlement?.is_winner === true;
+              const won = isWinner(bet) || pendingWinnings(bet);
+              const canClaim = Boolean(
+                bet.round_number != null &&
+                !hasClaimed(bet) &&
+                hasClaimableWinnings(bet),
+              );
               const resultAmount = won ? stake : bet.status === "LOST" ? -stake : 0;
               const prediction = Number(bet.prediction) === 0
                 ? "OVER"
@@ -196,6 +263,7 @@ function WalletActivity({ bets, isLoading, error }: { bets: Array<Record<string,
                   : "—";
               return (
                 <tr key={bet.bet_id} className="border-b border-border/60 last:border-0">
+                  <td className="px-4 py-3 text-right font-mono text-xs text-muted-foreground">{bet.round_number == null ? "—" : `#${bet.round_number}`}</td>
                   <td className="px-4 py-3">
                     <span className={won
                       ? "clip-tag border border-emerald-500 bg-emerald-500/15 px-2 py-0.5 font-mono text-[0.625rem] uppercase text-emerald-700"
@@ -212,7 +280,22 @@ function WalletActivity({ bets, isLoading, error }: { bets: Array<Record<string,
                   <td className="px-2 py-3 font-mono text-sm">{prediction}</td>
                   {/* Profile history's result is the settled round's final count. */}
                   <td className="px-2 py-3 font-mono text-sm tabular-nums">{bet.result ?? "—"}</td>
-                  <td className="px-4 py-3 text-right font-mono text-xs text-muted-foreground">{bet.round_number == null ? "—" : `#${bet.round_number}`}</td>
+                  <td className="px-4 py-3 text-right">
+                    {canClaim ? (
+                      <button
+                        type="button"
+                        onClick={() => onClaim(Number(bet.round_number))}
+                        disabled={claimingRound !== null}
+                        className="clip-tag border border-primary px-3 py-2 font-mono text-xs text-primary disabled:cursor-wait disabled:opacity-50"
+                      >
+                        {claimingRound === Number(bet.round_number) ? "Claiming…" : "Claim HYPE"}
+                      </button>
+                    ) : hasClaimed(bet) ? (
+                      <span className="font-mono text-xs text-muted-foreground">Claimed</span>
+                    ) : bet.round_number == null ? (
+                      <span className="font-mono text-xs text-muted-foreground">—</span>
+                    ) : null}
+                  </td>
                 </tr>
               );
             })}

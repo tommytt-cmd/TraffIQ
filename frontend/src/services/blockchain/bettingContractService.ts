@@ -17,6 +17,26 @@ const MIN_BET_ABI = [{
   outputs: [{ type: "uint256" }],
 }] as const satisfies Abi;
 
+const ROUND_WINNINGS_ABI = [{
+  type: "function",
+  name: "pendingReward",
+  stateMutability: "view",
+  inputs: [{ name: "roundId", type: "uint256" }, { name: "user", type: "address" }],
+  outputs: [{ type: "uint256" }],
+}, {
+  type: "function",
+  name: "winningsClaimed",
+  stateMutability: "view",
+  inputs: [{ name: "roundId", type: "uint256" }, { name: "user", type: "address" }],
+  outputs: [{ type: "bool" }],
+}, {
+  type: "function",
+  name: "claimWinnings",
+  stateMutability: "nonpayable",
+  inputs: [{ name: "roundId", type: "uint256" }],
+  outputs: [],
+}] as const satisfies Abi;
+
 function getBettingContractConfig() {
   const address = import.meta.env["VITE_BETTING_CONTRACT_ADDRESS"] as string | undefined;
   const artifact = RushBettingArtifact as Record<string, any>;
@@ -342,6 +362,25 @@ export class BettingContractService {
     return result === undefined || result === null ? 0n : BigInt(result.toString());
   }
 
+  static async getRoundWinningsStatus(provider: PublicClient, roundNumber: number, player: Address) {
+    const { address } = getBettingContractConfig();
+    const [pending, claimed] = await Promise.all([
+      provider.readContract({
+        address: address as Address,
+        abi: ROUND_WINNINGS_ABI,
+        functionName: "pendingReward",
+        args: [BigInt(roundNumber), player],
+      }),
+      provider.readContract({
+        address: address as Address,
+        abi: ROUND_WINNINGS_ABI,
+        functionName: "winningsClaimed",
+        args: [BigInt(roundNumber), player],
+      }),
+    ]);
+    return { pending: BigInt(pending.toString()), claimed: Boolean(claimed) };
+  }
+
   /*static async getClaimStatus(provider: PublicClient, address: string): Promise<ClaimStatus> {
     const { address: contractAddress, abi } = getBettingContractConfig();
     console.debug("[BettingContractService] getClaimStatus send", {
@@ -369,18 +408,18 @@ export class BettingContractService {
   }*/
 
   static async estimateClaimEth(provider: PublicClient, account: Address, roundNumber: number) {
-    const { address: contractAddress, abi } = getBettingContractConfig();
+    const { address: contractAddress } = getBettingContractConfig();
     return provider.estimateContractGas({
       address: contractAddress as Address,
-      abi,
-      functionName: "claimETH",
+      abi: ROUND_WINNINGS_ABI,
+      functionName: "claimWinnings",
       account,
       args: [BigInt(roundNumber)],
     });
   }
 
   static async claimEth(signer: WalletClient, roundNumber: number) {
-    const { address: contractAddress, abi } = getBettingContractConfig();
+    const { address: contractAddress } = getBettingContractConfig();
     const account = signer.account;
 
     if (typeof signer.writeContract !== "function") {
@@ -394,8 +433,8 @@ export class BettingContractService {
     return signer.writeContract({
       chain: signer.chain,
       address: contractAddress as Address,
-      abi,
-      functionName: "claimETH",
+      abi: ROUND_WINNINGS_ABI,
+      functionName: "claimWinnings",
       account,
       args: [BigInt(roundNumber)],
     });
