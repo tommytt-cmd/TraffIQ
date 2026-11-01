@@ -92,8 +92,11 @@ class PlayerSettlementService:
         bet_stake = bet.stake if bet is not None else None
         bet_status = bet.status.value if bet is not None else None
         is_winner = None
-        if bet is not None and round_model.result is not None:
-            is_winner = bet.prediction == round_model.result
+        if bet is not None and round_model.result is not None and round_model.threshold is not None:
+            # Match ElyRushBetting.Side exactly: OVER = 0, UNDER = 1.
+            # A final count equal to the line resolves to UNDER on-chain.
+            winning_side = 0 if round_model.result > round_model.threshold else 1
+            is_winner = bet.prediction == winning_side
 
         settlement = PlayerSettlement(
             round_id=round_id,

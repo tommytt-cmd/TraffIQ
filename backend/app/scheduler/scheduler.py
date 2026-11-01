@@ -339,7 +339,8 @@ class GameScheduler:
                     if self.settlement_service is not None and winner is not None:
                         await self.settlement_service.settle_round(
                             current.id,
-                            winner_side=1 if winner == "OVER" else 0,
+                            # ElyRushBetting.Side: OVER = 0, UNDER = 1.
+                            winner_side=0 if winner == "OVER" else 1,
                         )
 
                     if current.ends_at is not None:
