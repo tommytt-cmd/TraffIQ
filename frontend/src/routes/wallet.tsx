@@ -204,7 +204,7 @@ function WalletPage() {
                   {connectedAddress.slice(0, 8)}…{connectedAddress.slice(-6)}
                 </p>
                 <p className="mt-2 font-mono text-xs uppercase text-muted-foreground">
-                  Network: <span className={isCorrectNetwork ? "font-bold text-emerald-500" : "font-bold text-rose-500"}>{isCorrectNetwork ? "Elysium" : "Wrong network"}</span>
+                  Network: <span className={isCorrectNetwork ? "font-bold text-emerald-500" : "font-bold text-rose-500"}>{isCorrectNetwork ? `Elysium ${wallet.chainId}` : "Wrong network"}</span>
                 </p>
               </div>
 
