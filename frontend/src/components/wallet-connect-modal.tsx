@@ -10,6 +10,7 @@ import { useAccount, useConnect, type Connector } from "wagmi";
 import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { walletStore } from "@/lib/store";
+import { TransactionService } from "@/services/blockchain/transactionService";
 
 interface WalletModalContextValue {
   open: boolean;
@@ -164,11 +165,7 @@ function WalletModal() {
                     await connectAsync({ connector });
                     setOpen(false);
                   } catch (error) {
-                    toast.error(
-                      error instanceof Error
-                        ? error.message
-                        : "Wallet connection cancelled",
-                    );
+                    toast.error(TransactionService.normalizeError(error, "wallet"));
                   }
                 }}
                 className="clip-tag flex items-center gap-4 border border-border bg-surface-2/60 px-4 py-3 text-left transition-colors hover:border-primary disabled:opacity-60"

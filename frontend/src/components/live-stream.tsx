@@ -76,7 +76,6 @@ export function LiveStream({
   const lastSyncedTimeRef = useRef<number>(-1);
   
   const showVideo = phase === "live" || phase === "settle";
-  console.log(`LiveStream: phase=${phase}, showVideo=${showVideo}, playbackTime=${playbackTime}, videoUrl=${videoUrl}`);
 
   // Reset counter to 0 when leaving live phase
   useEffect(() => {

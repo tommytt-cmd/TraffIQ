@@ -6,6 +6,7 @@ import { Panel, SectionHeading } from "@/components/panel";
 import { useWallet } from "@/hooks/useWallet";
 import { useBettingContract } from "@/hooks/useBettingContract";
 import { BettingContractService } from "@/services/blockchain/bettingContractService";
+import { TransactionService } from "@/services/blockchain/transactionService";
 
 export const Route = createFileRoute("/rewards")({ component: RewardsPage });
 
@@ -48,7 +49,7 @@ function RewardsPage() {
       await wallet.provider.waitForTransactionReceipt({ hash });
       toast.success(kind === "claim" ? "Holder rewards claimed." : "ElyRush withdrawal confirmed.");
       setSharesInput(""); await refresh(); await betting.readClaimState();
-    } catch (error) { toast.error((error as Error).message || "Transaction failed."); }
+    } catch (error) { toast.error(TransactionService.normalizeError(error)); }
     finally { setPending(null); }
   }
 
@@ -62,7 +63,7 @@ function RewardsPage() {
       await refresh();
       await betting.readClaimState();
     } catch (error) {
-      toast.error((error as Error).message || "Unable to claim this round's ElyRush reward.");
+      toast.error(TransactionService.normalizeError(error));
     } finally {
       setClaimingRound(null);
     }

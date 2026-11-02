@@ -3,9 +3,6 @@ import { cn } from "@/lib/utils";
 
 export function PhaseTimeline({ phase, remaining, totalForPhase }: { phase: Phase; remaining: number; totalForPhase: number }) {
   const activeIndex = PHASE_ORDER.indexOf(phase);
-  console.log(`Active Index: ${activeIndex}`);
-  console.log(`Phase: ${phase}, remaining: ${remaining}, total: ${totalForPhase}`);
-  //console.log(remaining);
 
   return (
     <div className="grid gap-3 sm:grid-cols-4">

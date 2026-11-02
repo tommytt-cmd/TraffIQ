@@ -39,7 +39,6 @@ const PHASE_STYLE: Record<
 };
 
 export function PhaseStatus({ phase, remaining, totalForPhase }: { phase: GamePhase; remaining: number; totalForPhase: number; }) {
-  console.log(`Phase: ${phase}`);
   const s = PHASE_STYLE[phase];
   const Icon = s.icon;
   const progress = 1 - remaining / totalForPhase;

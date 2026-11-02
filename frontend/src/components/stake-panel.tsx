@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { TrendingDown, TrendingUp, Lock } from "lucide-react";
+import { toast } from "sonner";
 
 import { useWallet as useBlockchainWallet } from "@/hooks/useWallet";
 import { useBettingContract, type BetSide } from "@/hooks/useBettingContract";
@@ -168,6 +169,8 @@ export function StakePanel({ roundId, phase, roundNumber, threshold, pool }: Sta
         hash: txHash,
       });
 
+      toast.success("Your bet was confirmed on Elysium.");
+
       console.debug("[StakePanel] transaction receipt", receipt);
 
       updateTransaction(transactionId, {
@@ -204,7 +207,6 @@ export function StakePanel({ roundId, phase, roundNumber, threshold, pool }: Sta
           side: sideKey,
           amountEth: amount,
         });
-        console.log("[StakePanel] backend sync succeeded");
       } catch (error) {
         console.error("[StakePanel] backend sync failed after tx receipt", error);
         setBackendSyncError((error as Error).message || "Unable to sync bet with backend.");
@@ -229,6 +231,7 @@ export function StakePanel({ roundId, phase, roundNumber, threshold, pool }: Sta
 
       const message = TransactionService.normalizeError(error);
       setSubmissionError(message);
+      toast.error(message);
       updateTransaction(transactionId, {
         title: "Bet failed",
         description: message,
@@ -240,7 +243,6 @@ export function StakePanel({ roundId, phase, roundNumber, threshold, pool }: Sta
     }
   }
 
-  console.log(`Backend error: ${backendSyncError}, Submission error: ${submissionError}, Betting error: ${betting.error} Status message: ${statusMessage}`);
 
   return (
     <div className="panel border border-border/50 bg-surface-2/60 p-6">

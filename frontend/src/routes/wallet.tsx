@@ -8,6 +8,7 @@ import { useAccount } from "wagmi";
 
 import { useWallet } from "@/hooks/useWallet";
 import { BettingContractService } from "@/services/blockchain/bettingContractService";
+import { TransactionService } from "@/services/blockchain/transactionService";
 import { elysiumTestnetChain } from "@/services/blockchain/wagmi";
 
 export const Route = createFileRoute("/wallet")({
@@ -84,7 +85,7 @@ function WalletPage() {
       toast.success(`Round #${roundNumber} winnings claimed.`);
       await activityQuery.refetch();
     } catch (error) {
-      toast.error((error as Error).message || "Unable to claim round winnings.");
+      toast.error(TransactionService.normalizeError(error));
     } finally {
       setClaimingRound(null);
     }
