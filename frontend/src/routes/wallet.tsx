@@ -303,7 +303,7 @@ function WalletActivity({ bets, isLoading, error, claimingRound, onClaim }: {
       </div>
       {error ? <p className="rounded-2xl border border-rose-400/40 bg-rose-400/10 p-4 text-sm text-rose-200">{error.message}</p> : null}
       <section className="panel overflow-x-auto">
-        <table className="w-full min-w-[480px] border-collapse text-left">
+        <table className="w-full min-w-[320px] border-collapse text-left">
           <thead>
             <tr className="border-b border-border">
               <th className="label-tech px-2 py-3 text-right">Round</th>
