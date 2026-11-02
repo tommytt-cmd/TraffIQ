@@ -76,6 +76,17 @@ function normalizeWalletKey(value?: string) {
   return value?.trim().toLowerCase().replace(/\s+/g, "") ?? "";
 }
 
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function openInRabbyMobile() {
+  const deepLink = new URL("rabbygo://go.rabby.io/mobile/");
+  deepLink.searchParams.set("_cmd", "open-dapp");
+  deepLink.searchParams.set("dapp", window.location.href);
+  window.location.assign(deepLink.toString());
+}
+
 function metaFor(connector: Connector) {
   const lookupKeys = [connector.id, connector.name].map(normalizeWalletKey);
 
@@ -161,6 +172,12 @@ function WalletModal() {
                 key={connector.uid}
                 disabled={isPending}
                 onClick={async () => {
+                  if (meta.label === "Rabby Wallet" && isMobileDevice()) {
+                    setOpen(false);
+                    openInRabbyMobile();
+                    return;
+                  }
+
                   try {
                     await connectAsync({ connector });
                     setOpen(false);
