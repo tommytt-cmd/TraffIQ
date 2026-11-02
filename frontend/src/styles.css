@@ -161,7 +161,7 @@ div[class*="rounded-2xl"][class*="border"] {
 }
 
 table { border-collapse: collapse; }
-th { background: var(--primary); color: var(--foreground); }
+th { background: var(--primary); color: var(--primary-foreground); }
 th, td { border: 1.5px solid var(--foreground); }
 
 nav a[aria-current='true'], nav a.active {
