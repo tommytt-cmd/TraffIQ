@@ -3,6 +3,7 @@ import {
   metaMaskWallet,
   rabbyWallet,
   rainbowWallet,
+  injectedWallet,
   walletConnectWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { http, defineChain } from "viem";
@@ -49,7 +50,13 @@ export const wagmiConfig = getDefaultConfig({
   wallets: [
     {
       groupName: "Popular",
-      wallets: [metaMaskWallet, rabbyWallet, rainbowWallet, walletConnectWallet],
+      wallets: [
+        metaMaskWallet,
+        rabbyWallet,
+        injectedWallet,
+        rainbowWallet,
+        walletConnectWallet,
+      ],
     },
   ],
   transports: {
