@@ -171,14 +171,14 @@ function Index() {
         </div>
       </section>
 
-      <section aria-label="Demo notice" className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
+      {/*<section aria-label="Demo notice" className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
         <div className="flex items-center gap-3 border border-warning/60 bg-warning/15 px-4 py-3 text-warning-foreground">
           <AlertTriangle className="h-5 w-5 shrink-0 text-warning" aria-hidden="true" />
           <p className="font-mono text-xs font-semibold uppercase tracking-[0.12em] sm:text-sm">
             Demo only.
           </p>
         </div>
-      </section>
+      </section>*/}
 
       <section id="market" className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
         {loop.isLoading ? (
