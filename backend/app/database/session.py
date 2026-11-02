@@ -18,15 +18,7 @@ from app.models import stock  # noqa: F401
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./rushhour.db")
-DB_POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "3"))
-DB_MAX_OVERFLOW = int(os.getenv("DB_MAX_OVERFLOW", "0"))
-engine = create_async_engine(
-    DATABASE_URL,
-    echo=False,
-    pool_size=DB_POOL_SIZE,
-    max_overflow=DB_MAX_OVERFLOW,
-    pool_pre_ping=True,
-)
+engine = create_async_engine(DATABASE_URL, echo=False)
 SessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False)
 
 
