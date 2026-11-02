@@ -29,6 +29,11 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         setTransactions((current) =>
           current.map((item) => (item.id === id ? { ...item, ...transaction } : item)),
         );
+        if (transaction.status && /^(confirmed|failed|complete|completed|success)$/i.test(transaction.status)) {
+          window.setTimeout(() => {
+            setTransactions((current) => current.filter((item) => item.id !== id));
+          }, 8_000);
+        }
       },
       dismissTransaction: (id) => {
         setTransactions((current) => current.filter((transaction) => transaction.id !== id));
