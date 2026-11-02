@@ -102,11 +102,10 @@ function WalletPage() {
   };
 
   const activityBets = activityQuery.data ?? [];
-  const wonBets = activityBets.filter((bet) =>
-    typeof bet.settlement?.is_winner === "boolean"
-      ? bet.settlement.is_winner
-      : bet.status === "WON",
-  );
+  const wonBets = activityBets.filter((bet) => {
+    const status = bet.settlement?.bet_status ?? bet.status;
+    return status === "WON" || (status !== "LOST" && bet.settlement?.is_winner === true);
+  });
   const settledBets = activityBets.filter((bet) =>
     typeof bet.settlement?.is_winner === "boolean" ||
     bet.status === "WON" ||
@@ -282,10 +281,12 @@ function WalletActivity({ bets, isLoading, error, claimingRound, onClaim }: {
   claimingRound: number | null;
   onClaim: (roundNumber: number) => void;
 }) {
-  const isWinner = (bet: Record<string, any>) =>
-    typeof bet.settlement?.is_winner === "boolean"
-      ? bet.settlement.is_winner
-      : bet.status === "WON";
+  const isWinner = (bet: Record<string, any>) => {
+    const status = bet.settlement?.bet_status ?? bet.status;
+    if (status === "WON") return true;
+    if (status === "LOST") return false;
+    return bet.settlement?.is_winner === true;
+  };
   const pendingWinnings = (bet: Record<string, any>) =>
     Number(bet.onchainWinnings?.pending ?? bet.settlement?.pending_eth ?? 0) > 0;
   const hasClaimableWinnings = (bet: Record<string, any>) =>
@@ -320,7 +321,7 @@ function WalletActivity({ bets, isLoading, error, claimingRound, onClaim }: {
             ) : bets.length === 0 ? (
               <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-muted-foreground">No bets yet.</td></tr>
             ) : bets.map((bet) => {
-              const won = isWinner(bet) || pendingWinnings(bet);
+              const won = isWinner(bet);
               const canClaim = Boolean(
                 bet.round_number != null &&
                 !hasClaimed(bet) &&
