@@ -111,6 +111,19 @@ function WalletPage() {
     bet.status === "WON" ||
     bet.status === "LOST",
   );
+  const unclaimedBets = activityBets.filter((bet) => {
+    if (bet.round_number == null) return false;
+    const hasBeenClaimed = typeof bet.onchainWinnings?.claimed === "boolean"
+      ? bet.onchainWinnings.claimed
+      : Boolean(bet.settlement?.has_claimed || bet.settlement?.claim_status === "CLAIMED");
+    const hasPendingWinnings = bet.onchainWinnings?.pending !== undefined
+      ? BigInt(bet.onchainWinnings.pending) > 0n
+      : bet.settlement?.claim_status === "AVAILABLE" ||
+        Number(bet.settlement?.pending_eth ?? 0) > 0;
+    return !hasBeenClaimed && hasPendingWinnings;
+  }).filter((bet, index, unclaimed) =>
+    unclaimed.findIndex((candidate) => candidate.round_number === bet.round_number) === index,
+  );
   const totalWinnings = activityBets.reduce((total, bet) => {
     const pending = bet.onchainWinnings?.pending != null
       ? Number(bet.onchainWinnings.pending) / 1e18
@@ -169,6 +182,20 @@ function WalletPage() {
               ))}
             </div>
 
+            {!activityQuery.isLoading && unclaimedBets.length > 0 ? (
+              <div className="clip-tag flex flex-wrap items-center justify-between gap-3 border-2 border-foreground bg-amber-300 p-4 text-black shadow-[3px_3px_0_hsl(var(--foreground))]">
+                <div>
+                  <p className="font-display text-sm font-black uppercase tracking-[0.12em]">
+                    You have {unclaimedBets.length} unclaimed {unclaimedBets.length === 1 ? "round" : "rounds"}
+                  </p>
+                  <p className="mt-1 font-mono text-xs">
+                    {unclaimedBets.map((bet) => `#${bet.round_number}`).join(", ")} · Claim your HYPE from the table below.
+                  </p>
+                </div>
+                <span aria-hidden="true" className="font-display text-2xl font-black">!</span>
+              </div>
+            ) : null}
+
             <div className="flex flex-col justify-between gap-4 border-t-2 border-foreground pt-4 sm:flex-row sm:items-end">
               <div className="min-w-0">
                 <p className="font-display text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Connected wallet</p>
@@ -194,7 +221,7 @@ function WalletPage() {
               <button
                 type="button"
                 onClick={() => void disconnectWallet()}
-                className="clip-tag border-2 border-foreground bg-background px-5 py-3 font-display text-xs font-black uppercase tracking-[0.16em] text-foreground shadow-[3px_3px_0_hsl(var(--foreground))] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_hsl(var(--foreground))]"
+                className="clip-tag border-2 border-destructive bg-destructive/10 px-5 py-3 font-display text-xs font-black uppercase tracking-[0.16em] text-destructive shadow-[3px_3px_0_hsl(var(--destructive))] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-destructive hover:text-destructive-foreground hover:shadow-[1px_1px_0_hsl(var(--destructive))]"
               >
                 Disconnect
               </button>
@@ -268,10 +295,6 @@ function WalletActivity({ bets, isLoading, error, claimingRound, onClaim }: {
     typeof bet.onchainWinnings?.claimed === "boolean"
       ? bet.onchainWinnings.claimed
       : Boolean(bet.settlement?.has_claimed || bet.settlement?.claim_status === "CLAIMED");
-  const winners = bets.filter((bet) => isWinner(bet) || pendingWinnings(bet) || hasClaimed(bet));
-  const claimed = winners.filter(hasClaimed);
-  const awaiting = winners.filter((bet) => !hasClaimed(bet) && hasClaimableWinnings(bet));
-
   return (
     <div className="mt-10 space-y-6">
       <div>
@@ -346,26 +369,6 @@ function WalletActivity({ bets, isLoading, error, claimingRound, onClaim }: {
         </table>
       </section>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        {[
-          { title: "Claimed rounds", items: claimed },
-          { title: "Awaiting claim", items: awaiting },
-        ].map((section) => (
-          <section key={section.title} className="rounded-3xl border border-border bg-surface-2/70 p-5">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h3 className="text-xl">{section.title}</h3>
-              <span className="rounded-full border border-border px-3 py-1 font-mono text-xs text-muted-foreground">{section.items.length}</span>
-            </div>
-            {isLoading ? <p className="py-2 text-sm text-muted-foreground">Loading…</p> : section.items.length === 0 ? (
-              <p className="py-2 text-sm text-muted-foreground">No rounds.</p>
-            ) : (
-              <ul className="flex flex-wrap gap-2">
-                {section.items.map((bet) => <li key={bet.bet_id} className="rounded-full border border-border bg-background px-3 py-1 font-mono text-xs">Round #{bet.round_number ?? "—"}</li>)}
-              </ul>
-            )}
-          </section>
-        ))}
-      </div>
     </div>
   );
 }
