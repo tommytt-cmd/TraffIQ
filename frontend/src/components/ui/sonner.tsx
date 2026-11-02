@@ -9,12 +9,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
       position="top-center"
       duration={5000}
       closeButton
+      style={{ "--width": "min(32rem, calc(100vw - 2rem))" } as React.CSSProperties}
       toastOptions={{
         duration: 5000,
-        style: { width: "calc(100vw - 2rem)", maxWidth: "calc(100vw - 2rem)" },
         classNames: {
           toast:
-            "group toast max-w-[calc(100vw-2rem)] whitespace-normal break-words group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
+            "group toast min-w-0 max-w-full whitespace-normal break-words group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
           title: "whitespace-normal break-words",
           description: "group-[.toast]:text-muted-foreground",
           actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
