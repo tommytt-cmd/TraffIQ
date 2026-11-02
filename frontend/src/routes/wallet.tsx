@@ -306,10 +306,10 @@ function WalletActivity({ bets, isLoading, error, claimingRound, onClaim }: {
         <table className="w-full min-w-[320px] border-collapse text-left">
           <thead>
             <tr className="border-b border-border">
-              <th className="label-tech px-2 py-3 text-right">Round</th>
-              <th className="label-tech px-2 py-3">Result</th>
-              <th className="label-tech px-2 py-3">Winnings</th>
-              <th className="label-tech px-4 py-3 text-right">Action</th>
+              <th className="label-tech px-2 py-3 text-primary-foreground">Round</th>
+              <th className="label-tech px-2 py-3 text-primary-foreground">Result</th>
+              <th className="label-tech px-2 py-3 text-primary-foreground">Winnings</th>
+              <th className="label-tech px-4 py-3 text-primary-foreground text-right">Action</th>
               
             </tr>
           </thead>
